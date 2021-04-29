@@ -24,7 +24,8 @@ def g_render(nodes, links, categories):
             # itemstyle_opts=opts.ItemStyleOpts(color="rgb(230,73,74)", border_color="rgb(255,148,149)", border_width=3)
         )
             .set_global_opts(
-            title_opts=opts.TitleOpts(title="Simulation_Flow_Graph")
+            title_opts=opts.TitleOpts(title="Simulation_Flow_Graph"),
+            legend_opts=opts.LegendOpts(legend_icon="circle")
         )
             .render("Simulation_Flow_Graph.html")
     )
@@ -40,11 +41,25 @@ def load_topology_data(file: str):
     return topo_arr
 
 
+def load_type_data(file: str) -> dict:
+    nodes_type_dict = {}
+    with open(file, 'r') as f:
+        lines_list = f.readlines()
+    if len(lines_list) != 3:
+        raise ValueError("wrong format in node_type.txt file!")
+    else:
+        for index, line in enumerate(lines_list):
+            nodes_list = line.strip().split(",")
+            for node in nodes_list:
+                nodes_type_dict[node] = index + 1
+    return nodes_type_dict
+
+
 def dataHandler(flow_arr: np.ndarray, topo_arr: np.ndarray):
     """
     根据节点流数据和节点拓扑文件生成最终数据表
     数据表共7列数据，的格式为：
-    [Node1 Node2 Category1 Category2 load_val1 load_val2 link_val]
+    [Node1 Node2 Community1 Category2 load_val1 load_val2 link_val]
     :param flow_arr: 节点的流数组
     :param topo_arr: 节点拓扑数组
     :return:  整合之后的数组
@@ -72,27 +87,31 @@ def dataHandler(flow_arr: np.ndarray, topo_arr: np.ndarray):
 def run():
     flow_data = load_flow_data("flow_data.txt")
     topo_data = load_topology_data("community_small.txt")
+    type_data = load_type_data("node_type.txt")
     all_data = dataHandler(flow_data, topo_data)
     nodes_data = []
     links_data = []
     category_data = []
-    nodes = {}
-    # 创建节点
+    nodes = {}  # 存放所有节点的集合
+    symbol_list = ["circle", "roundRect", "rect", "triangle"]  # 分别代表普通节点,源节点，目的节点，汇聚节点
+    # 创建节点 ===========================================================
     for line in all_data:
         startNode, endNode, s_cat, e_cat, s_val, e_val, link_val = line
-        nodes[startNode] = (s_val, s_cat)
-        nodes[endNode] = (e_val, e_cat)
+        nodes[startNode] = (s_val, s_cat, type_data.get(str(startNode), 0))
+        nodes[endNode] = (e_val, e_cat, type_data.get(str(endNode), 0))
         # if startNode == 13:
-        #     print(line)
+    # print(nodes)
     for key in nodes.keys():
         nodes_data.append(
-            opts.GraphNode(name=str(key), symbol_size=20 + int(nodes[key][0]) * 10, value=str(nodes[key][0]),
-                           category=int(nodes[key][1]-1),
+            opts.GraphNode(name=str(key), symbol=str(symbol_list[nodes[key][2]]),
+                           symbol_size=20 + int(nodes[key][0]) * 10,
+                           value=str(nodes[key][0]),
+                           category=int(nodes[key][1] - 1),
                            label_opts=opts.LabelOpts(position="bottom", font_size=14, font_weight="bold")
                            )
         )
     # print(nodes)
-    # 创建边
+    # 创建边 =============================================================
     for line in all_data:
         startNode, endNode, s_cat, e_cat, s_val, e_val, link_val = line
         # color_r = str(150 - link_val)
@@ -112,7 +131,7 @@ def run():
                                                          distance=1)
                                )
             )
-    # 创建类别
+    # 创建类别 ===========================================================
     category_set = set(list(all_data[:, 2]) + list(all_data[:, 3]))
     for cate in category_set:
         category_data.append(
