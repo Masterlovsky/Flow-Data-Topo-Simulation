@@ -115,7 +115,6 @@ def run():
     # 创建类别
     category_set = set(list(all_data[:, 2]) + list(all_data[:, 3]))
     for cate in category_set:
-        print(cate)
         category_data.append(
             opts.GraphCategory(name="社区" + str(cate))
         )
@@ -125,3 +124,4 @@ def run():
 
 if __name__ == '__main__':
     run()
+    print("done!")
