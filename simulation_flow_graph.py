@@ -94,6 +94,7 @@ def run():
     category_data = []
     nodes = {}  # 存放所有节点的集合
     symbol_list = ["circle", "roundRect", "triangle", "rect"]  # 分别代表普通节点,源节点，目的节点，汇聚节点
+    labels_tuple = ("源", "目的", "汇聚")
     # 创建节点 ===========================================================
     for line in all_data:
         startNode, endNode, s_cat, e_cat, s_val, e_val, link_val = line
@@ -101,18 +102,23 @@ def run():
         nodes[endNode] = (e_val, e_cat, type_data.get(str(endNode), 0))
     # print(nodes)
     for key in nodes.keys():
+        _name = str(key)
+        _formatter = labels_tuple[nodes[key][2] - 1] + ":{b},流量:{c}"
+        # 如果节点上的流量不为0 --------------------
         if int(nodes[key][0]):
-            # _name = str(key) + ": " + str(nodes[key][0])
-            _name = str(key)
             _symbol_size = 12 + int(nodes[key][0]) * 3
-            _label_opts = opts.LabelOpts(position="bottom", font_size=14, font_weight="bold", color="red",
-                                         formatter="{b}:{c}")
-            _item_style_opts = opts.ItemStyleOpts(border_color="red", border_width=2)
+        # 节点上的流量为0 -------------------------
         else:
-            _name = str(key)
             _symbol_size = 10
+        # 节点不是普通节点 ------------------------
+        if nodes[key][2] != 0:
+            _item_style_opts = opts.ItemStyleOpts(border_color="red", border_width=2)
+            _label_opts = opts.LabelOpts(position="bottom", font_size=14, font_weight="bold", color="red",
+                                         formatter=_formatter)
+        else:
             _label_opts = opts.LabelOpts(position="bottom", font_size=12, font_weight="normal")
             _item_style_opts = None
+        # 添加节点
         nodes_data.append(
             opts.GraphNode(name=_name, symbol=str(symbol_list[nodes[key][2]]),
                            symbol_size=_symbol_size,
