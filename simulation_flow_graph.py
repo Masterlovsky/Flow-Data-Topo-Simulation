@@ -93,7 +93,7 @@ def run():
     links_data = []
     category_data = []
     nodes = {}  # 存放所有节点的集合
-    symbol_list = ["circle", "roundRect", "rect", "triangle"]  # 分别代表普通节点,源节点，目的节点，汇聚节点
+    symbol_list = ["circle", "roundRect","triangle","rect"]  # 分别代表普通节点,源节点，目的节点，汇聚节点
     # 创建节点 ===========================================================
     for line in all_data:
         startNode, endNode, s_cat, e_cat, s_val, e_val, link_val = line
@@ -104,7 +104,7 @@ def run():
     for key in nodes.keys():
         nodes_data.append(
             opts.GraphNode(name=str(key), symbol=str(symbol_list[nodes[key][2]]),
-                           symbol_size=20 + int(nodes[key][0]) * 10,
+                           symbol_size=10+40 *(int(nodes[key][0]))/100 ,
                            value=str(nodes[key][0]),
                            category=int(nodes[key][1] - 1),
                            label_opts=opts.LabelOpts(position="bottom", font_size=14, font_weight="bold")
@@ -118,14 +118,14 @@ def run():
         # color = "rgb(" + color_r + "," + color_r + "," + color_r + ")"
         if int(link_val) == 0:
             links_data.append(
-                opts.GraphLink(source=str(startNode), target=str(endNode), value=int(link_val),
+                opts.GraphLink(source=str(startNode), target=str(endNode), value=int(40*(link_val)/100),
                                linestyle_opts=opts.LineStyleOpts(width=1)
                                )
             )
         else:
             links_data.append(
                 opts.GraphLink(source=str(startNode), target=str(endNode), value=int(link_val),
-                               linestyle_opts=opts.LineStyleOpts(width=1 + int(link_val) * 2, type_="solid",
+                               linestyle_opts=opts.LineStyleOpts(width=3+4*(link_val)/100, type_="solid",
                                                                  color="orange"),
                                label_opts=opts.LabelOpts(is_show=True, position="middle", formatter="{c} kpps",
                                                          distance=1)
