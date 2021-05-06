@@ -1,6 +1,7 @@
 #! /usr/bin/python3
 # -*- encoding:utf-8 -*-
 from pyecharts import options as opts
+from pyecharts.globals import ThemeType
 from pyecharts.charts import Graph
 import numpy as np
 import pandas as pd
@@ -8,7 +9,7 @@ import pandas as pd
 
 def g_render(nodes, links, categories):
     c = (
-        Graph(opts.InitOpts(width="1440px", height="720px", page_title="FlowGraph"))
+        Graph(opts.InitOpts(width="1440px", height="720px", page_title="FlowGraph", theme=ThemeType.WHITE))
             .add(
             "",
             nodes,
