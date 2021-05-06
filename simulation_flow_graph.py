@@ -14,7 +14,7 @@ def g_render(nodes, links, categories):
             nodes,
             links,
             categories=categories,
-            repulsion=1000,
+            repulsion=300,
             is_draggable=True,
             # edge_label=opts.LabelOpts(
             #     is_show=True, position="middle", formatter="flow speed:{c} kpps"
@@ -93,24 +93,35 @@ def run():
     links_data = []
     category_data = []
     nodes = {}  # 存放所有节点的集合
-    symbol_list = ["circle", "roundRect","triangle","rect"]  # 分别代表普通节点,源节点，目的节点，汇聚节点
+    symbol_list = ["circle", "roundRect", "triangle", "rect"]  # 分别代表普通节点,源节点，目的节点，汇聚节点
     # 创建节点 ===========================================================
     for line in all_data:
         startNode, endNode, s_cat, e_cat, s_val, e_val, link_val = line
         nodes[startNode] = (s_val, s_cat, type_data.get(str(startNode), 0))
         nodes[endNode] = (e_val, e_cat, type_data.get(str(endNode), 0))
-        # if startNode == 13:
     # print(nodes)
     for key in nodes.keys():
+        if int(nodes[key][0]):
+            # _name = str(key) + ": " + str(nodes[key][0])
+            _name = str(key)
+            _symbol_size = 12 + int(nodes[key][0]) * 3
+            _label_opts = opts.LabelOpts(position="bottom", font_size=14, font_weight="bold", color="red",
+                                         formatter="{b}:{c}")
+            _item_style_opts = opts.ItemStyleOpts(border_color="red", border_width=2)
+        else:
+            _name = str(key)
+            _symbol_size = 10
+            _label_opts = opts.LabelOpts(position="bottom", font_size=12, font_weight="normal")
+            _item_style_opts = None
         nodes_data.append(
-            opts.GraphNode(name=str(key), symbol=str(symbol_list[nodes[key][2]]),
-                           symbol_size=10+40 *(int(nodes[key][0]))/100 ,
+            opts.GraphNode(name=_name, symbol=str(symbol_list[nodes[key][2]]),
+                           symbol_size=_symbol_size,
                            value=str(nodes[key][0]),
                            category=int(nodes[key][1] - 1),
-                           label_opts=opts.LabelOpts(position="bottom", font_size=14, font_weight="bold")
+                           label_opts=_label_opts,
+                           itemstyle_opts=_item_style_opts  # 如果没改源码需要把这行注释掉！
                            )
         )
-    # print(nodes)
     # 创建边 =============================================================
     for line in all_data:
         startNode, endNode, s_cat, e_cat, s_val, e_val, link_val = line
@@ -118,14 +129,14 @@ def run():
         # color = "rgb(" + color_r + "," + color_r + "," + color_r + ")"
         if int(link_val) == 0:
             links_data.append(
-                opts.GraphLink(source=str(startNode), target=str(endNode), value=int(40*(link_val)/100),
+                opts.GraphLink(source=str(startNode), target=str(endNode), value=int(40 * link_val / 100),
                                linestyle_opts=opts.LineStyleOpts(width=1)
                                )
             )
         else:
             links_data.append(
                 opts.GraphLink(source=str(startNode), target=str(endNode), value=int(link_val),
-                               linestyle_opts=opts.LineStyleOpts(width=3+4*(link_val)/100, type_="solid",
+                               linestyle_opts=opts.LineStyleOpts(width=3 + 4 * link_val / 100, type_="solid",
                                                                  color="orange"),
                                label_opts=opts.LabelOpts(is_show=True, position="middle", formatter="{c} kpps",
                                                          distance=1)
