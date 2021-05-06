@@ -120,7 +120,9 @@ def run():
             _item_style_opts = None
         # 添加节点
         nodes_data.append(
-            opts.GraphNode(name=_name, symbol=str(symbol_list[nodes[key][2]]),
+            opts.GraphNode(name=_name,
+                           symbol=str(symbol_list[nodes[key][2]]),
+                           # symbol="image://pics/接入交换机.svg",
                            symbol_size=_symbol_size,
                            value=str(nodes[key][0]),
                            category=int(nodes[key][1] - 1),
