@@ -9,7 +9,7 @@ import pandas as pd
 
 def g_render(nodes, links, categories):
     c = (
-        Graph(opts.InitOpts(width="1440px", height="720px", page_title="FlowGraph", theme=ThemeType.WHITE))
+        Graph(opts.InitOpts(width="1600px", height="950px", page_title="FlowGraph", theme=ThemeType.WHITE))
             .add(
             "",
             nodes,
@@ -17,16 +17,19 @@ def g_render(nodes, links, categories):
             categories=categories,
             repulsion=300,
             is_draggable=True,
+            # layout="circular",
+            tooltip_opts=opts.TooltipOpts(formatter="ID:{b}, Load:{c}"),
             # edge_label=opts.LabelOpts(
             #     is_show=True, position="middle", formatter="flow speed:{c} kpps"
             # ),
-            edge_symbol="arrow",
-            edge_symbol_size=5,
+            # edge_symbol=["circle", "arrow"],
+            # edge_symbol_size=10,
             # itemstyle_opts=opts.ItemStyleOpts(color="rgb(230,73,74)", border_color="rgb(255,148,149)", border_width=3)
         )
             .set_global_opts(
             title_opts=opts.TitleOpts(title="Simulation_Flow_Graph"),
-            legend_opts=opts.LegendOpts(legend_icon="circle")
+            legend_opts=opts.LegendOpts(legend_icon="circle"),
+            toolbox_opts=opts.ToolboxOpts(is_show=True, feature=opts.ToolBoxFeatureOpts()),
         )
             .render("Simulation_Flow_Graph.html")
     )
@@ -54,6 +57,21 @@ def load_type_data(file: str) -> dict:
             for node in nodes_list:
                 nodes_type_dict[node] = index + 1
     return nodes_type_dict
+
+
+def load_axis_to_dict(file: str) -> dict:
+    node_axis_dict = {}
+    _x = None
+    _y = None
+    with open(file, 'r') as f:
+        lines_list = f.readlines()
+    for index, line in enumerate(lines_list):
+        nodes_list = line.strip().split(",")
+        if len(nodes_list) != 3:
+            continue
+        _x, _y = nodes_list[1], nodes_list[2]
+        node_axis_dict[nodes_list[0]] = (_x, _y)
+    return node_axis_dict
 
 
 def dataHandler(flow_arr: np.ndarray, topo_arr: np.ndarray):
@@ -101,24 +119,120 @@ def run():
         startNode, endNode, s_cat, e_cat, s_val, e_val, link_val = line
         nodes[startNode] = (s_val, s_cat, type_data.get(str(startNode), 0))
         nodes[endNode] = (e_val, e_cat, type_data.get(str(endNode), 0))
-    # print(nodes)
+    # print(nodes.keys())
     for key in nodes.keys():
         _name = str(key)
         _symbol_size = 12 + int(nodes[key][0]) * 3 if int(nodes[key][0]) else 10
-        # 对特殊节点进行单独标识 ------------------------
+        # 对特殊节点进行单独标识 ---------------------------------------
         if nodes[key][2] > 0:
             _formatter = labels_tuple[nodes[key][2] - 1] + ":{b},流量:{c}"
             _item_style_opts = opts.ItemStyleOpts(border_color="red", border_width=2)
             _label_opts = opts.LabelOpts(position="bottom", font_size=14, font_weight="bold", color="red",
                                          formatter=_formatter)
+        # 普通节点标识 ------------------------------------------------
         else:
             _label_opts = opts.LabelOpts(position="bottom", font_size=12, font_weight="normal")
             _item_style_opts = None
+            # _is_fixed = False
         # 添加节点
+        if str(key) == "0":
+            _is_fixed = True
+            _x = 800
+            _y = 100
+        elif str(key) == "1":
+            _is_fixed = True
+            _x = 800
+            _y = 150
+        elif str(key) == "4":
+            _is_fixed = True
+            _x = 680
+            _y = 376
+        elif str(key) == "7":
+            _is_fixed = True
+            _x = 760
+            _y = 376
+        elif str(key) == "38":
+            _is_fixed = True
+            _x = 1000
+            _y = 276
+        elif str(key) == "40":
+            _is_fixed = True
+            _x = 900
+            _y = 376
+        elif str(key) == "44":
+            _is_fixed = True
+            _x = 1070
+            _y = 376
+        elif str(key) == "20":
+            _is_fixed = True
+            _x = 450
+            _y = 636
+        elif str(key) == "27":
+            _is_fixed = True
+            _x = 450
+            _y = 536
+        elif str(key) == "26":
+            _is_fixed = True
+            _x = 520
+            _y = 470
+        elif str(key) == "24":
+            _is_fixed = True
+            _x = 650
+            _y = 536
+        elif str(key) == "25":
+            _is_fixed = True
+            _x = 547
+            _y = 670
+        elif str(key) == "11":
+            _is_fixed = True
+            _x = 650
+            _y = 893
+        elif str(key) == "8":
+            _is_fixed = True
+            _x = 900
+            _y = 893
+        elif str(key) == "17":
+            _is_fixed = True
+            _x = 1150
+            _y = 893
+        elif str(key) == "9":
+            _is_fixed = True
+            _x = 750
+            _y = 806
+        elif str(key) == "15":
+            _is_fixed = True
+            _x = 1050
+            _y = 806
+        elif str(key) == "16":
+            _is_fixed = True
+            _x = 900
+            _y = 750
+        elif str(key) == "76":
+            _is_fixed = True
+            _x = 900
+            _y = 636
+        elif str(key) == "66":
+            _is_fixed = True
+            _x = 1237
+            _y = 614
+        elif str(key) == "57":
+            _is_fixed = True
+            _x = 1220
+            _y = 582
+        else:
+            _is_fixed = False
+            _x = None
+            _y = None
+        # _is_fixed = False
+        # _x = None
+        # _y = None
         nodes_data.append(
             opts.GraphNode(name=_name,
+                           x=_x,
+                           y=_y,
                            symbol=str(symbol_list[nodes[key][2]]),
                            # symbol="image://pics/接入交换机.svg",
+                           is_fixed=_is_fixed,
                            symbol_size=_symbol_size,
                            value=str(nodes[key][0]),
                            category=int(nodes[key][1] - 1),
@@ -134,16 +248,24 @@ def run():
         if int(link_val) == 0:
             links_data.append(
                 opts.GraphLink(source=str(startNode), target=str(endNode), value=int(40 * link_val / 100),
-                               linestyle_opts=opts.LineStyleOpts(width=1)
+                               linestyle_opts=opts.LineStyleOpts(width=0.5)
                                )
             )
         else:
             links_data.append(
-                opts.GraphLink(source=str(startNode), target=str(endNode), value=int(link_val),
+                opts.GraphLink(source=str(startNode),
+                               target=str(endNode),
+                               value=int(link_val),
+                               symbol=["none", "arrow"],
+                               symbol_size=10 + int(link_val),
                                linestyle_opts=opts.LineStyleOpts(width=3 + 4 * link_val / 100, type_="solid",
                                                                  color="orange"),
-                               label_opts=opts.LabelOpts(is_show=True, position="middle", formatter="{c} kpps",
-                                                         distance=1)
+                               label_opts=opts.LabelOpts(is_show=True, position="middle",
+                                                         formatter=str(startNode) + " => " + str(
+                                                             endNode) + " load: {c}",
+                                                         distance=1,
+                                                         horizontal_align="center"
+                                                         )
                                )
             )
     # 创建类别 ===========================================================
@@ -159,3 +281,5 @@ def run():
 if __name__ == '__main__':
     run()
     print("done!")
+#   定时10s刷新html页面
+#   <meta http-equiv="Refresh" content="10"/>
