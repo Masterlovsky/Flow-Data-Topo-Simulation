@@ -69,7 +69,7 @@ def load_axis_to_dict(file: str) -> dict:
         nodes_list = line.strip().split(",")
         if len(nodes_list) != 3:
             continue
-        _x, _y = nodes_list[1], nodes_list[2]
+        _x, _y = float(nodes_list[1]), float(nodes_list[2])
         node_axis_dict[nodes_list[0]] = (_x, _y)
     return node_axis_dict
 
@@ -103,10 +103,106 @@ def dataHandler(flow_arr: np.ndarray, topo_arr: np.ndarray):
     return topo_arr
 
 
+def manual_set_node(key):
+    if str(key) == "0":
+        _is_fixed = True
+        _x = 800
+        _y = 100
+    elif str(key) == "1":
+        _is_fixed = True
+        _x = 800
+        _y = 150
+    elif str(key) == "4":
+        _is_fixed = True
+        _x = 680
+        _y = 376
+    elif str(key) == "7":
+        _is_fixed = True
+        _x = 760
+        _y = 376
+    elif str(key) == "38":
+        _is_fixed = True
+        _x = 1000
+        _y = 276
+    elif str(key) == "40":
+        _is_fixed = True
+        _x = 900
+        _y = 376
+    elif str(key) == "44":
+        _is_fixed = True
+        _x = 1070
+        _y = 376
+    elif str(key) == "20":
+        _is_fixed = True
+        _x = 450
+        _y = 636
+    elif str(key) == "27":
+        _is_fixed = True
+        _x = 450
+        _y = 536
+    elif str(key) == "26":
+        _is_fixed = True
+        _x = 520
+        _y = 470
+    elif str(key) == "24":
+        _is_fixed = True
+        _x = 650
+        _y = 536
+    elif str(key) == "25":
+        _is_fixed = True
+        _x = 547
+        _y = 670
+    elif str(key) == "11":
+        _is_fixed = True
+        _x = 650
+        _y = 893
+    elif str(key) == "8":
+        _is_fixed = True
+        _x = 900
+        _y = 893
+    elif str(key) == "17":
+        _is_fixed = True
+        _x = 1150
+        _y = 893
+    elif str(key) == "9":
+        _is_fixed = True
+        _x = 750
+        _y = 806
+    elif str(key) == "15":
+        _is_fixed = True
+        _x = 1050
+        _y = 806
+    elif str(key) == "16":
+        _is_fixed = True
+        _x = 900
+        _y = 750
+    elif str(key) == "76":
+        _is_fixed = True
+        _x = 900
+        _y = 636
+    elif str(key) == "66":
+        _is_fixed = True
+        _x = 1237
+        _y = 614
+    elif str(key) == "57":
+        _is_fixed = True
+        _x = 1220
+        _y = 582
+    else:
+        _is_fixed = False
+        _x = None
+        _y = None
+    return _is_fixed, _x, _y
+    # _is_fixed = False
+    # _x = None
+    # _y = None
+
+
 def run():
     flow_data = load_flow_data("flow_data.txt")
     topo_data = load_topology_data("community_small.txt")
     type_data = load_type_data("node_type.txt")
+    layout_data = load_axis_to_dict("layout.txt")
     all_data = dataHandler(flow_data, topo_data)
     nodes_data = []
     links_data = []
@@ -123,6 +219,7 @@ def run():
     for key in nodes.keys():
         _name = str(key)
         _symbol_size = 12 + int(nodes[key][0]) * 3 if int(nodes[key][0]) else 10
+        _x, _y = layout_data[str(key)]
         # 对特殊节点进行单独标识 ---------------------------------------
         if nodes[key][2] > 0:
             _formatter = labels_tuple[nodes[key][2] - 1] + ":{b},流量:{c}"
@@ -135,104 +232,14 @@ def run():
             _item_style_opts = None
             # _is_fixed = False
         # 添加节点
-        if str(key) == "0":
-            _is_fixed = True
-            _x = 800
-            _y = 100
-        elif str(key) == "1":
-            _is_fixed = True
-            _x = 800
-            _y = 150
-        elif str(key) == "4":
-            _is_fixed = True
-            _x = 680
-            _y = 376
-        elif str(key) == "7":
-            _is_fixed = True
-            _x = 760
-            _y = 376
-        elif str(key) == "38":
-            _is_fixed = True
-            _x = 1000
-            _y = 276
-        elif str(key) == "40":
-            _is_fixed = True
-            _x = 900
-            _y = 376
-        elif str(key) == "44":
-            _is_fixed = True
-            _x = 1070
-            _y = 376
-        elif str(key) == "20":
-            _is_fixed = True
-            _x = 450
-            _y = 636
-        elif str(key) == "27":
-            _is_fixed = True
-            _x = 450
-            _y = 536
-        elif str(key) == "26":
-            _is_fixed = True
-            _x = 520
-            _y = 470
-        elif str(key) == "24":
-            _is_fixed = True
-            _x = 650
-            _y = 536
-        elif str(key) == "25":
-            _is_fixed = True
-            _x = 547
-            _y = 670
-        elif str(key) == "11":
-            _is_fixed = True
-            _x = 650
-            _y = 893
-        elif str(key) == "8":
-            _is_fixed = True
-            _x = 900
-            _y = 893
-        elif str(key) == "17":
-            _is_fixed = True
-            _x = 1150
-            _y = 893
-        elif str(key) == "9":
-            _is_fixed = True
-            _x = 750
-            _y = 806
-        elif str(key) == "15":
-            _is_fixed = True
-            _x = 1050
-            _y = 806
-        elif str(key) == "16":
-            _is_fixed = True
-            _x = 900
-            _y = 750
-        elif str(key) == "76":
-            _is_fixed = True
-            _x = 900
-            _y = 636
-        elif str(key) == "66":
-            _is_fixed = True
-            _x = 1237
-            _y = 614
-        elif str(key) == "57":
-            _is_fixed = True
-            _x = 1220
-            _y = 582
-        else:
-            _is_fixed = False
-            _x = None
-            _y = None
-        # _is_fixed = False
-        # _x = None
-        # _y = None
+        # _is_fixed, _x, _y = manual_set_node(key)
         nodes_data.append(
             opts.GraphNode(name=_name,
                            x=_x,
                            y=_y,
                            symbol=str(symbol_list[nodes[key][2]]),
                            # symbol="image://pics/接入交换机.svg",
-                           is_fixed=_is_fixed,
+                           is_fixed=True,
                            symbol_size=_symbol_size,
                            value=str(nodes[key][0]),
                            category=int(nodes[key][1] - 1),
