@@ -103,23 +103,31 @@ def dataHandler(flow_arr: np.ndarray, topo_arr: np.ndarray):
     return topo_arr
 
 
-def manual_set_node(key):
+def manual_set_node(key: str) -> tuple:
     if str(key) == "0":
         _is_fixed = True
-        _x = 800
+        _x = 450
         _y = 100
     elif str(key) == "1":
         _is_fixed = True
-        _x = 800
-        _y = 150
+        _x = 500
+        _y = 300
+    elif str(key) == "3":
+        _is_fixed = True
+        _x = 650
+        _y = 300
     elif str(key) == "4":
         _is_fixed = True
         _x = 680
         _y = 376
+    elif str(key) == "6":
+        _is_fixed = True
+        _x = 600
+        _y = 100
     elif str(key) == "7":
         _is_fixed = True
-        _x = 760
-        _y = 376
+        _x = 800
+        _y = 300
     elif str(key) == "38":
         _is_fixed = True
         _x = 1000
@@ -218,8 +226,7 @@ def run():
     # print(nodes.keys())
     for key in nodes.keys():
         _name = str(key)
-        _symbol_size = 12 + int(nodes[key][0]) * 3 if int(nodes[key][0]) else 10
-        _x, _y = layout_data[str(key)]
+        _symbol_size = 12 + int(nodes[key][0]/80) * 3 if int(nodes[key][0]/80) else 10
         # 对特殊节点进行单独标识 ---------------------------------------
         if nodes[key][2] > 0:
             _formatter = labels_tuple[nodes[key][2] - 1] + ":{b},流量:{c}"
@@ -232,6 +239,8 @@ def run():
             _item_style_opts = None
             # _is_fixed = False
         # 添加节点
+        _x, _y = layout_data[str(key)]
+        _is_fixed = True
         # _is_fixed, _x, _y = manual_set_node(key)
         nodes_data.append(
             opts.GraphNode(name=_name,
@@ -239,7 +248,7 @@ def run():
                            y=_y,
                            symbol=str(symbol_list[nodes[key][2]]),
                            # symbol="image://pics/接入交换机.svg",
-                           is_fixed=True,
+                           is_fixed=_is_fixed,
                            symbol_size=_symbol_size,
                            value=str(nodes[key][0]),
                            category=int(nodes[key][1] - 1),
@@ -254,7 +263,7 @@ def run():
         # color = "rgb(" + color_r + "," + color_r + "," + color_r + ")"
         if int(link_val) == 0:
             links_data.append(
-                opts.GraphLink(source=str(startNode), target=str(endNode), value=int(40 * link_val / 100),
+                opts.GraphLink(source=str(startNode), target=str(endNode), value=int(40 * link_val / 10000),
                                linestyle_opts=opts.LineStyleOpts(width=0.5)
                                )
             )
@@ -263,13 +272,12 @@ def run():
                 opts.GraphLink(source=str(startNode),
                                target=str(endNode),
                                value=int(link_val),
-                               symbol=["none", "arrow"],
-                               symbol_size=10 + int(link_val),
-                               linestyle_opts=opts.LineStyleOpts(width=3 + 4 * link_val / 100, type_="solid",
+                               symbol=["none", "none"],
+                               symbol_size=10 + int(link_val/50),
+                               linestyle_opts=opts.LineStyleOpts(width=3 + 4 * link_val / 10000, type_="solid",
                                                                  color="orange"),
                                label_opts=opts.LabelOpts(is_show=True, position="middle",
-                                                         formatter=str(startNode) + " => " + str(
-                                                             endNode) + " load: {c}",
+                                                         formatter="{c}",
                                                          distance=1,
                                                          horizontal_align="center"
                                                          )

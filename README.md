@@ -20,9 +20,11 @@
 
 
 6. 获取实时渲染之后的点的坐标，在浏览器**console**中输入以下**function**中的**js**代码即可，获取到之后拷贝到`layout.txt`中。
+
+- 注意：chart_<id> 要改成生成的html文件中对应的chart_id
 ```javascript
 function getLayout() {
-    var points = chart_9d2db8b4c12d4228a0bfaddc5bb0b905.getModel().getSeriesByIndex(0).preservedPoints
+    var points = chart_d99899c6190a4318a834c40cb01a2c32.getModel().getSeriesByIndex(0).preservedPoints
     for (var i=0; i<=78; i++) {
         console.log(i + "," + points[i])
         document.write(i + "," + points[i]+"</br>")
