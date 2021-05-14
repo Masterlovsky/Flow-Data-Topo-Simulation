@@ -11,6 +11,17 @@
     <script>
         var chart_1a53dbfa024e4c22b72f77a579c0c63b = echarts.init(
             document.getElementById('1a53dbfa024e4c22b72f77a579c0c63b'), 'white', {renderer: 'canvas'});
+            
+            chart_1a53dbfa024e4c22b72f77a579c0c63b.on('mouseup',
+            function(params){
+                var option=chart_1a53dbfa024e4c22b72f77a579c0c63b.getOption();
+                option.series[0].data[params.dataIndex].x=params.event.offsetX;
+                option.series[0].data[params.dataIndex].y=params.event.offsetY;
+                option.series[0].data[params.dataIndex].fixed=true;
+                chart_1a53dbfa024e4c22b72f77a579c0c63b.setOption(option);
+            }
+        )
+        
         var option_1a53dbfa024e4c22b72f77a579c0c63b = {
     "animation": true,
     "animationThreshold": 2000,
@@ -49,7 +60,7 @@
     "series": [
         {
             "type": "graph",
-            "layout": "force",
+            "layout": "none",
             "symbolSize": 10,
             "circular": {
                 "rotateLabel": false
@@ -6646,10 +6657,10 @@
     ],
     "toolbox": {
         "show": true,
-        "orient": "horizontal",
+        "orient": "vertical",
         "itemSize": 15,
         "itemGap": 10,
-        "left": "80%",
+        "left": "right",
         "feature": {
             "saveAsImage": {
                 "type": "png",
@@ -6680,7 +6691,7 @@
                 "buttonTextColor": "#fff"
             },
             "dataZoom": {
-                "show": true,
+                "show": false,
                 "title": {
                     "zoom": "\u533a\u57df\u7f29\u653e",
                     "back": "\u533a\u57df\u7f29\u653e\u8fd8\u539f"
@@ -6691,20 +6702,7 @@
                 "filterMode": "filter"
             },
             "magicType": {
-                "show": true,
-                "type": [
-                    "line",
-                    "bar",
-                    "stack",
-                    "tiled"
-                ],
-                "title": {
-                    "line": "\u5207\u6362\u4e3a\u6298\u7ebf\u56fe",
-                    "bar": "\u5207\u6362\u4e3a\u67f1\u72b6\u56fe",
-                    "stack": "\u5207\u6362\u4e3a\u5806\u53e0",
-                    "tiled": "\u5207\u6362\u4e3a\u5e73\u94fa"
-                },
-                "icon": {}
+                "is_show": false
             },
             "brush": {
                 "icon": {},

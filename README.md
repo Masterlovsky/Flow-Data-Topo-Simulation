@@ -8,18 +8,30 @@
    
 
 2. 将节点负载和边负载关系放入flow_data.txt中，空格分隔。文件格式为：原节点，目的节点，原节点负载，目的节点负载，边权重。
+
+
+3. 将最新的边负载关系放入flow_data_new.txt中，空格分隔。该文件用于区分新增加的flow，格式与flow_data.txt 格式相同。
    
 
-3. 将节点类型关系放入node_type.txt，逗号分隔，共四行，第一行为源节点集合，第二行为目的节点集合，第三行为LN节点集合，第四行为RP节点集合。
+4. 将节点类型关系放入node_type.txt，逗号分隔，共四行，第一行为源节点集合，第二行为目的节点集合，第三行为LN节点集合，第四行为RP节点集合。
    
 
-4. 运行simulation_flow_graph.py 生成html文件
+5. 运行simulation_flow_graph.py 生成html文件。其中run()方法增加了对不同layout的支持，
+```shell
+"force"   是力引导模型，用于调试，可以拖动;
+"manual"  可以初始化时确定部分点的坐标，坐标在 manual_set_node() 中确定;
+"none"    用于最终展示，固定所有点的坐标，不可拖动，动画效果好;
+```
    
 
-5. 在浏览器打开html文件预览
+6. 在浏览器打开html文件预览，如果需要定时刷新页面，需要在html文件中增加一行标签：
+```html
+<!--每隔10秒刷新一次页面-->
+<meta http-equiv="Refresh" content="10"/> 
+```
 
 
-6. 获取实时渲染之后的点的坐标，在浏览器**console**中输入以下**function**中的**js**代码即可，获取到之后拷贝到`layout.txt`中。
+7. 获取实时渲染之后的点的坐标，在浏览器**console**中输入以下**function**中的**js**代码即可，获取到之后拷贝到`layout.txt`中。
 
 - 注意：chart_<id> 要改成生成的html文件中对应的chart_id
 ```javascript
@@ -45,4 +57,4 @@ $ python setup.py install
 
 
 ### 结果展示图样例：
-![img_1.png](img_1.png)
+![img.png](img.png)
