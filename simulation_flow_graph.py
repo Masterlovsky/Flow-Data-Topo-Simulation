@@ -5,6 +5,7 @@ from pyecharts.globals import ThemeType
 from pyecharts.charts import Graph
 import numpy as np
 import pandas as pd
+import json
 
 
 def g_make(nodes, links, categories, layout) -> Graph:
@@ -244,6 +245,18 @@ def manual_set_node(key: str) -> tuple:
     return _is_fixed, _x, _y
 
 
+def get_node_num(nodes: dict) -> None:
+    """
+    获取每个社区的节点数目并输出在console中
+    :param nodes: 节点字典，格式为：{NodeID: (val, Category, type)}
+    """
+    num_dict = {}
+    for node, item in nodes.items():
+        category = int(item[1])
+        num_dict[category] = num_dict.setdefault(category, 0) + 1
+    print(json.dumps(num_dict, sort_keys=True, indent=4))
+
+
 def run(layout: str = "force") -> Graph:
     """
     主函数，按照需求生成所有节点和边，并渲染输出
@@ -282,7 +295,7 @@ def run(layout: str = "force") -> Graph:
                                          formatter=_formatter)
         # 普通节点标识 --------------------------------------------------------------
         else:
-            _label_opts = opts.LabelOpts(position="bottom", font_size=12, font_weight="normal")
+            _label_opts = opts.LabelOpts(is_show=False, position="bottom", font_size=12, font_weight="normal")
             _item_style_opts = None
         # 添加节点
         if layout == "none":
@@ -373,6 +386,7 @@ def run(layout: str = "force") -> Graph:
         '''
     )
     graph_.render("Simulation_Flow_Graph.html")
+    get_node_num(nodes)  # 获取每个社区的节点数目
     return graph_
 
 
