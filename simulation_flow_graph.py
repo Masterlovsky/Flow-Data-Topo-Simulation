@@ -254,6 +254,7 @@ def get_node_num(nodes: dict) -> None:
     for node, item in nodes.items():
         category = int(item[1])
         num_dict[category] = num_dict.setdefault(category, 0) + 1
+    print("{ 社区编号: 节点数 }")
     print(json.dumps(num_dict, sort_keys=True, indent=4))
 
 
