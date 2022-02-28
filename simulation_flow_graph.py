@@ -50,7 +50,7 @@ def load_flow_data(file: str):
 
 
 def load_topology_data(file: str):
-    topo_arr = np.loadtxt(file, delimiter="\t", dtype=int, skiprows=1)
+    topo_arr = np.loadtxt(file, dtype=int, skiprows=1)
     return topo_arr
 
 
@@ -101,6 +101,7 @@ def dataHandler(flow_arr: np.ndarray, flow_new_arr: np.ndarray, topo_arr: np.nda
     数据表共8列数据，的格式为：
     [Node1 Node2 Community1 Category2 load_val1 load_val2 link_val flag]
     flag: {0: 普通记录, 1: flow_data记录, 2: flow_data_new记录}
+    :param flow_new_arr:
     :param flow_arr: 节点的流数组
     :param topo_arr: 节点拓扑数组
     :return:  整合之后的数组
@@ -267,11 +268,11 @@ def run(layout: str = "force") -> Graph:
     "manual"  可以初始化时确定部分点的坐标，坐标在 manual_set_node() 中确定;
     "none"    用于最终展示，固定所有点的坐标，不可拖动，动画效果好;
     """
-    flow_data = load_flow_data("flow_data.txt")
-    flow_data_n = sieve_flow_data("flow_data.txt", "flow_data_new.txt")
-    topo_data = load_topology_data("community_small.txt")
-    type_data = load_type_data("node_type.txt")
-    layout_data = load_axis_to_dict("layout.txt")
+    flow_data = load_flow_data(flow_data_file)
+    flow_data_n = sieve_flow_data(flow_data_file, flow_data_new_file)
+    topo_data = load_topology_data(topo_file)
+    type_data = load_type_data(node_type_file)
+    layout_data = load_axis_to_dict(layout_file)
     all_data = dataHandler(flow_data, flow_data_n, topo_data)
     nodes_data = []
     links_data = []
@@ -287,7 +288,7 @@ def run(layout: str = "force") -> Graph:
     # print(nodes.keys())
     for key in nodes.keys():
         _name = str(key)
-        _symbol_size = 12 + int(nodes[key][0] / 80) * 3 if int(nodes[key][0] / 80) else 10
+        _symbol_size = NODE_NORMAL_SIZE + int(nodes[key][0] / 100) * 3 if int(nodes[key][0] / 100) else NODE_NORMAL_SIZE
         # 对特殊节点进行单独标识 -----------------------------------------------------
         if nodes[key][2] > 0:
             _formatter = labels_tuple[nodes[key][2] - 1] + ":{b},流量:{c}"
@@ -296,7 +297,7 @@ def run(layout: str = "force") -> Graph:
                                          formatter=_formatter)
         # 普通节点标识 --------------------------------------------------------------
         else:
-            _label_opts = opts.LabelOpts(is_show=False, position="bottom", font_size=12, font_weight="normal")
+            _label_opts = opts.LabelOpts(is_show=True, position="bottom", font_size=12, font_weight="normal")
             _item_style_opts = None
         # 添加节点
         if layout == "none":
@@ -392,6 +393,13 @@ def run(layout: str = "force") -> Graph:
 
 
 if __name__ == '__main__':
+    data_source_dir = "data_source_example/"
+    topo_file = data_source_dir + "community_small.txt"
+    flow_data_file = data_source_dir + "flow_data.txt"
+    flow_data_new_file = data_source_dir + "flow_data_new.txt"
+    layout_file = data_source_dir + "layout.txt"
+    node_type_file = data_source_dir + "node_type.txt"
+    NODE_NORMAL_SIZE = 15  # Identifies the standard size of a common no-flow node
     graph = run(layout="force")
     print("done!")
 #   定时10s刷新html页面
