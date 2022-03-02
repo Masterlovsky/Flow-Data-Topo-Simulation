@@ -393,8 +393,9 @@ def run(layout: str = "force") -> Graph:
 
 
 if __name__ == '__main__':
-    data_source_dir = "data_source_example/"
+    data_source_dir = "data_source/"
     topo_file = data_source_dir + "community_small.txt"
+    # topo_file = "topoGen/test_topo.txt"
     flow_data_file = data_source_dir + "flow_data.txt"
     flow_data_new_file = data_source_dir + "flow_data_new.txt"
     layout_file = data_source_dir + "layout.txt"
