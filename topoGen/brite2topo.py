@@ -1,3 +1,5 @@
+#! /usr/bin/python3
+# -*- encoding:utf-8 -*-
 import pandas as pd
 import re
 
@@ -11,8 +13,8 @@ def findEdgesLine(file_name: str) -> int:
 
 
 def getNodesAndEdgesNumber(file_name: str) -> tuple:
-    with open(file_name, 'r') as f:
-        first_line = f.readline()
+    with open(file_name, 'r') as line:
+        first_line = line.readline()
         if not first_line.startswith("Topology"):
             print("Get Nodes and Edges Number Error! Unknown format")
             return 0, 0
