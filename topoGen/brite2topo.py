@@ -23,16 +23,20 @@ def getNodesAndEdgesNumber(file_name: str) -> tuple:
 
 
 if __name__ == '__main__':
-    input_file = "test.brite"
+    input_file = "test2.brite"
     output_file = "test_topo.txt"
     startLine = findEdgesLine(input_file)
     node_num, edges_num = getNodesAndEdgesNumber(input_file)
-    df = pd.read_csv(input_file, skiprows=startLine, sep="\t", skipinitialspace=True, header=None,
-                     index_col=0)
+    df = pd.read_csv(input_file, skiprows=startLine, sep="\t", skipinitialspace=True, header=None)
+    # print(df.head())
     if df.loc[0, 6] == -1:
         df[6] = 1
+    else:
+        df[6] += 1
     if df.loc[0, 7] == -1:
         df[7] = 1
+    else:
+        df[7] += 1
     df = pd.DataFrame(df[[1, 2, 6, 7]])
     with open(output_file, "w") as f:
         f.write(node_num + " " + edges_num + "\n")
