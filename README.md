@@ -13,7 +13,7 @@
 3. 将最新的边负载关系放入flow_data_new.txt中，空格分隔。该文件用于区分新增加的flow，格式与flow_data.txt 格式相同。
    
 
-4. 将节点类型关系放入node_type.txt，逗号分隔，共四行，第一行为源节点集合，第二行为目的节点集合，第三行为LN节点集合，第四行为RP节点集合。
+4. 将节点类型关系放入node_type.txt，逗号分隔，共四行，第一行为receiver集合，第二行为source集合，第三行为switch节点集合，第四行为BGN节点集合。
    
 
 5. 运行simulation_flow_graph.py 生成html文件。其中run()方法增加了对不同layout的支持，

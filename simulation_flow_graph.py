@@ -278,8 +278,8 @@ def run(layout: str = "force") -> Graph:
     links_data = []
     category_data = []
     nodes = {}  # 存放所有节点的集合
-    symbol_list = ["circle", "roundRect", "triangle", "rect", "diamond"]  # 分别代表普通节点,源节点，目的节点，叶节点，汇聚节点
-    labels_tuple = ("源", "目的", "LN", "RP")
+    symbol_list = ["circle", "roundRect", "rect", "triangle", "diamond"]  # 分别代表router, receiver，source，switch，bgn
+    labels_tuple = ("RCV", "SRC", "SW", "BGN")
     # 创建节点 ======================================================================
     for line in all_data:
         startNode, endNode, s_cat, e_cat, s_val, e_val = line[:6]
@@ -291,7 +291,7 @@ def run(layout: str = "force") -> Graph:
         _symbol_size = NODE_NORMAL_SIZE + int(nodes[key][0] / 100) * 3 if int(nodes[key][0] / 100) else NODE_NORMAL_SIZE
         # 对特殊节点进行单独标识 -----------------------------------------------------
         if nodes[key][2] > 0:
-            _formatter = labels_tuple[nodes[key][2] - 1] + ":{b},流量:{c}"
+            _formatter = labels_tuple[nodes[key][2] - 1] + ":{b}, Load:{c}"
             _item_style_opts = opts.ItemStyleOpts(border_color="red", border_width=2)
             _label_opts = opts.LabelOpts(position="bottom", font_size=14, font_weight="bold", color="red",
                                          formatter=_formatter)
@@ -367,7 +367,7 @@ def run(layout: str = "force") -> Graph:
     category_set = set(list(all_data[:, 2]) + list(all_data[:, 3]))
     for cate in category_set:
         category_data.append(
-            opts.GraphCategory(name="社区" + str(cate))
+            opts.GraphCategory(name="AS:" + str(cate))
         )
     # 生成关系图 =======================================================================
     if layout != "none":
