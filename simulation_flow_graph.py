@@ -62,7 +62,8 @@ def load_type_data(file: str) -> dict:
         raise ValueError("wrong format in node_type.txt file!")
     else:
         for index, line in enumerate(lines_list):
-            nodes_list = line.strip().split(",")
+            line = line.split(":")[1]
+            nodes_list = line.strip("[ ]\n").split(", ")
             for node in nodes_list:
                 nodes_type_dict[node] = index + 1
     return nodes_type_dict
@@ -76,10 +77,12 @@ def load_axis_to_dict(file: str) -> dict:
         lines_list = f.readlines()
     for index, line in enumerate(lines_list):
         nodes_list = line.strip().split(",")
-        if len(nodes_list) != 3:
+        if len(nodes_list) != 4:
+            if index == 0:
+                print("Warning, wrong format in node_axis.txt file!")
             continue
-        _x, _y = float(nodes_list[1]), float(nodes_list[2])
-        node_axis_dict[nodes_list[0]] = (_x, _y)
+        _x, _y, _ctrl = float(nodes_list[1]), float(nodes_list[2]), int(nodes_list[3])
+        node_axis_dict[nodes_list[0]] = (_x, _y, _ctrl)
     return node_axis_dict
 
 
@@ -263,10 +266,10 @@ def run(layout: str = "force") -> Graph:
     """
     主函数，按照需求生成所有节点和边，并渲染输出
     :return: Graph 对象
-    :param layout: 共三种方式，"force","manual","none"
+    :param layout: 共三种方式，"force","manual","file"
     "force"   是力引导模型，用于调试，可以拖动;
     "manual"  可以初始化时确定部分点的坐标，坐标在 manual_set_node() 中确定;
-    "none"    用于最终展示，固定所有点的坐标，不可拖动，动画效果好;
+    "file"    从layout文件中读取坐标"
     """
     flow_data = load_flow_data(flow_data_file)
     flow_data_n = sieve_flow_data(flow_data_file, flow_data_new_file)
@@ -288,25 +291,32 @@ def run(layout: str = "force") -> Graph:
     # print(nodes.keys())
     for key in nodes.keys():
         _name = str(key)
+        _ctrl = 0  # 标记属于哪个控制域
         _symbol_size = NODE_NORMAL_SIZE + int(nodes[key][0] / 100) * 3 if int(nodes[key][0] / 100) else NODE_NORMAL_SIZE
         # 对特殊节点进行单独标识 -----------------------------------------------------
         if nodes[key][2] > 0:
-            _formatter = labels_tuple[nodes[key][2] - 1] + ":{b}, Load:{c}"
-            _item_style_opts = opts.ItemStyleOpts(border_color="red", border_width=2)
-            _label_opts = opts.LabelOpts(position="bottom", font_size=14, font_weight="bold", color="red",
-                                         formatter=_formatter)
+            _symbol_size = _symbol_size * 1.2
+            _label_formatter = labels_tuple[nodes[key][2] - 1] + ":{b}"
+            _formatter = labels_tuple[nodes[key][2] - 1] + ":{b}, load,ctrl:{c} "
+            # _item_style_opts = opts.ItemStyleOpts(border_width=2, border_color="red")
+            _item_style_opts = None
+            _label_opts = opts.LabelOpts(position="bottom", font_size=14, font_weight="bold",
+                                         formatter=_label_formatter)
+            _tooltip_opts = opts.TooltipOpts(trigger="item", formatter=_formatter)
         # 普通节点标识 --------------------------------------------------------------
         else:
+            _formatter = "ID:{b}, load, ctrl = {c}"
             _label_opts = opts.LabelOpts(is_show=True, position="bottom", font_size=12, font_weight="normal")
             _item_style_opts = None
+            _tooltip_opts = opts.TooltipOpts(formatter=_formatter)
         # 添加节点
-        if layout == "none":
-            _x, _y = layout_data[str(key)]
+        if layout == "file":
+            _x, _y, _ctrl = layout_data[str(key)]
             _is_fixed = True
         elif layout == "manual":
             _is_fixed, _x, _y = manual_set_node(key)
         else:
-            _x, _y = None, None
+            _x, _y, _ctrl = layout_data.get(str(key), (None, None, 0))
             _is_fixed = False
         nodes_data.append(
             opts.GraphNode(name=_name,
@@ -314,9 +324,10 @@ def run(layout: str = "force") -> Graph:
                            symbol=str(symbol_list[nodes[key][2]]),
                            # symbol="image://pics/接入交换机.svg",
                            symbol_size=_symbol_size,
-                           value=str(nodes[key][0]),
+                           value=[str(nodes[key][0]), _ctrl],
                            category=int(nodes[key][1] - 1),
                            label_opts=_label_opts,
+                           tooltip_opts=_tooltip_opts,
                            itemstyle_opts=_item_style_opts  # 如果没改源码需要把这行注释掉！
                            )
         )
@@ -370,9 +381,8 @@ def run(layout: str = "force") -> Graph:
             opts.GraphCategory(name="AS:" + str(cate))
         )
     # 生成关系图 =======================================================================
-    if layout != "none":
-        layout = "force"
     graph_ = g_make(nodes_data, links_data, category_data, layout)
+
     # 增加鼠标拖动点固定位置的js代码
     graph_.add_js_funcs(
         '''
@@ -394,8 +404,8 @@ def run(layout: str = "force") -> Graph:
 
 if __name__ == '__main__':
     data_source_dir = "data_source/"
-    # topo_file = data_source_dir + "community_small.txt"
-    topo_file = "topoGen/test_topo.txt"
+    topo_file = data_source_dir + "community_small.txt"
+    # topo_file = "topoGen/test_topo.txt"
     flow_data_file = data_source_dir + "flow_data.txt"
     flow_data_new_file = data_source_dir + "flow_data_new.txt"
     layout_file = data_source_dir + "layout.txt"
