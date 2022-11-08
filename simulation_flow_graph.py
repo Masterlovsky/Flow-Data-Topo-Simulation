@@ -1,5 +1,7 @@
 #! /usr/bin/python3
 # -*- encoding:utf-8 -*-
+import os
+
 from pyecharts import options as opts
 from pyecharts.globals import ThemeType
 from pyecharts.charts import Graph
@@ -271,6 +273,14 @@ def run(layout: str = "force") -> Graph:
     "manual"  可以初始化时确定部分点的坐标，坐标在 manual_set_node() 中确定;
     "file"    从layout文件中读取坐标"
     """
+    # if flow_data file or flow_data_new file is not exist, create it
+    if not os.path.exists(flow_data_file):
+        with open(flow_data_file, "w") as f:
+            f.write("")
+    if not os.path.exists(flow_data_new_file):
+        with open(flow_data_new_file, "w") as f:
+            f.write("")
+
     flow_data = load_flow_data(flow_data_file)
     flow_data_n = sieve_flow_data(flow_data_file, flow_data_new_file)
     topo_data = load_topology_data(topo_file)
@@ -403,8 +413,8 @@ def run(layout: str = "force") -> Graph:
 
 
 if __name__ == '__main__':
-    data_source_dir = "data_source/"
-    topo_file = data_source_dir + "community_small.txt"
+    data_source_dir = "topoGen/topology/"
+    topo_file = data_source_dir + "topo.txt"
     # topo_file = "topoGen/test_topo.txt"
     flow_data_file = data_source_dir + "flow_data.txt"
     flow_data_new_file = data_source_dir + "flow_data_new.txt"

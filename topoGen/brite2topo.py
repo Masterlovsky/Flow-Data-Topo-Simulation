@@ -134,24 +134,78 @@ def dump_topology(file_name: str, out_file: str, node_n: int, edge_n: int):
         f.write("")
     edge_line = findEdgesLine(file_name)
     # line describe: EdgeID, src, dst, weight, type
-    df = pd.read_csv(input_file, skiprows=edge_line, sep="\t", skipinitialspace=True, header=None)
+    df = pd.read_csv(file_name, skiprows=edge_line, sep="\t", header=None, skip_blank_lines=True)
+    print(df.tail())
     # format: edge_id, from_node, to_node, len, delay, capacity, from_as, to_as, type
     df[[6, 7]] += 1
     df = pd.DataFrame(df[[1, 2, 6, 7]])
-    with open(output_file, "w") as f:
-        f.write(str(edge_n) + " " + str(edge_n) + "\n")
-    df.to_csv(output_file, sep="\t", header=False, index=False, mode="a")
-    print("Generate topo done! nodes: {} / edges: {}, output to {}".format(node_n, edge_n, output_file))
+    with open(out_file, "w") as f:
+        f.write(str(node_n) + " " + str(edge_n) + "\n")
+    df.to_csv(out_file, sep="\t", header=False, index=False, mode="a")
+    print("Generate topo done! nodes: {} / edges: {}, output to {}".format(node_n, edge_n, out_file))
+
+
+def extent_brite_topo(file_name: str, out_file: str, one_deg_n: int):
+    """
+    Extend brite topology file, add receivers and sources which has degree one to the file
+    :param one_deg_n: receiver number + source number
+    :param file_name: input brite file name
+    :param out_file: output file name (brite file with extend information)
+    """
+    with open(file_name, 'r') as f:
+        lines = f.readlines()
+    # The first line is: Topology: (xx Nodes, xx Edges), xx += one_deg_n
+    n, e = re.findall(r"\d+", lines[0])
+    lines[0] = "Topology: ( {} Nodes, {} Edges )\n".format(int(n) + one_deg_n, int(e) + one_deg_n)
+    lines.append("\n")  # add a blank line to distinguish the extended lines information
+    # parse topology
+    topology = fnss.parse_brite(file_name).to_undirected()
+    topology = largest_connected_component_subgraph(topology)
+    # get node degree
+    deg = nx.degree(topology)
+    # sorted the node by degree low -> high
+    deg = sorted(deg, key=lambda x: x[1])
+    # get number of nodes
+    node_n = topology.number_of_nodes()
+    # get max node id and max edge id
+    max_node_id = max(topology.nodes())
+    max_edge_id = int(lines[-2].split("\t")[0])
+    # get node list which has degree of the first 20% of the total nodes
+    node_list = [v[0] for v in deg[:int(node_n * 0.2)]]
+    # get edge line, (insert row index is edge line - 1)
+    edge_line = findEdgesLine(file_name) - 1
+    for i in range(one_deg_n):
+        new_node = max_node_id + 1 + i
+        connect_node = random.choice(node_list)
+        # print(connect_node, topology.nodes[connect_node])
+        # construct new node line: NodeID, x, y, x-deg, y-deg, as_id
+        new_node_line = str(new_node) + "\t" + str(random.randint(0, 1000)) + "\t" + str(
+            random.randint(0, 1000)) + "\t" + "1" + "\t" + "1" + "\t" + str(
+            topology.nodes[connect_node].get("AS", 0)) + "\t" + "RT_NODE" + "\n"
+        lines.insert(edge_line - 1 + i, new_node_line)
+        # construct new edge line: EdgeID, src, dst, distance, delay, capacity, from_as, to_as, type
+        edge_id = max_edge_id + 1 + i
+        from_as = to_as = topology.nodes[connect_node].get("AS", 0)
+        new_edge_line = str(edge_id) + "\t" + str(new_node) + "\t" + str(connect_node) + "\t" + str(
+            random.random() * 1000) + "\t" + str(0.5 + random.random() / 4) + "\t" + str(10.0) + "\t" + str(
+            from_as) + "\t" + str(to_as) + "\t" + "E_RT" + "\t" + "U\n"
+        lines.append(new_edge_line)
+
+    # write to output file
+    with open(out_file, 'w') as f:
+        f.writelines(lines)
 
 
 if __name__ == '__main__':
-    input_file = "test_seanrs.brite"
-    output_file = "test_topo.txt"
-    out_layout_file = "test_layout.txt"
-    out_node_type_file = "test_node_type.txt"
-    startLine = findEdgesLine(input_file)
-    node_num, edges_num = getNodesAndEdgesNumber(input_file)
-    dump_topology(input_file, output_file, node_num, edges_num)  # Generate topology file
-    dump_axies_from_brite(input_file, out_layout_file, node_num, 3)  # Generate layout file
-    dump_node_type(input_file, out_node_type_file, 0.5)  # Generate node type file
-
+    path = "topology/"  # brite file path
+    # path = ""
+    input_file = path + "test_seanrs2.brite"
+    extend_input_file = path + "test_seanrs2_extend.brite"
+    extent_brite_topo(input_file, extend_input_file, 20)
+    topo_file = path + "topo.txt"
+    out_layout_file = path + "layout.txt"
+    out_node_type_file = path + "node_type.txt"
+    node_num, edges_num = getNodesAndEdgesNumber(extend_input_file)
+    dump_topology(extend_input_file, topo_file, node_num, edges_num)  # Generate topology file
+    dump_axies_from_brite(extend_input_file, out_layout_file, node_num, 3)  # Generate layout file
+    dump_node_type(extend_input_file, out_node_type_file, 0.5)  # Generate node type file
