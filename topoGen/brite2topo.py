@@ -135,7 +135,6 @@ def dump_topology(file_name: str, out_file: str, node_n: int, edge_n: int):
     edge_line = findEdgesLine(file_name)
     # line describe: EdgeID, src, dst, weight, type
     df = pd.read_csv(file_name, skiprows=edge_line, sep="\t", header=None, skip_blank_lines=True)
-    print(df.tail())
     # format: edge_id, from_node, to_node, len, delay, capacity, from_as, to_as, type
     df[[6, 7]] += 1
     df = pd.DataFrame(df[[1, 2, 6, 7]])
@@ -145,9 +144,10 @@ def dump_topology(file_name: str, out_file: str, node_n: int, edge_n: int):
     print("Generate topo done! nodes: {} / edges: {}, output to {}".format(node_n, edge_n, out_file))
 
 
-def extent_brite_topo(file_name: str, out_file: str, one_deg_n: int):
+def extent_brite_topo(file_name: str, out_file: str, one_deg_n: int, sw_ratio: float = 0.3):
     """
     Extend brite topology file, add receivers and sources which has degree one to the file
+    :param sw_ratio: the first sw_ratio * node_n access switches will be random chosen
     :param one_deg_n: receiver number + source number
     :param file_name: input brite file name
     :param out_file: output file name (brite file with extend information)
@@ -163,15 +163,16 @@ def extent_brite_topo(file_name: str, out_file: str, one_deg_n: int):
     topology = largest_connected_component_subgraph(topology)
     # get node degree
     deg = nx.degree(topology)
-    # sorted the node by degree low -> high
-    deg = sorted(deg, key=lambda x: x[1])
+    # change deg form [(node, degree)] to dict
+    deg = dict(deg)
     # get number of nodes
     node_n = topology.number_of_nodes()
     # get max node id and max edge id
     max_node_id = max(topology.nodes())
     max_edge_id = int(lines[-2].split("\t")[0])
-    # get node list which has degree of the first 20% of the total nodes
-    node_list = [v[0] for v in deg[:int(node_n * 0.2)]]
+    #! get node list which has degree of the first 30% of the total nodes without bgn
+    candidate_nodes = [v for v in topology.nodes() if topology.nodes[v]["type"] != "RT_BORDER"]
+    node_list = sorted(candidate_nodes, key=lambda x: deg[x])[:int(len(candidate_nodes) * sw_ratio)]
     # get edge line, (insert row index is edge line - 1)
     edge_line = findEdgesLine(file_name) - 1
     for i in range(one_deg_n):
