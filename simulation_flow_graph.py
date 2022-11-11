@@ -348,8 +348,8 @@ def run(layout: str = "force") -> Graph:
         # color = "rgb(" + color_r + "," + color_r + "," + color_r + ")"
         if flag == 0:
             links_data.append(
-                opts.GraphLink(source=str(startNode), target=str(endNode), value=int(40 * link_val / 10000),
-                               linestyle_opts=opts.LineStyleOpts(width=0.5)
+                opts.GraphLink(source=str(startNode), target=str(endNode), value=int(link_val),
+                               linestyle_opts=opts.LineStyleOpts(width=1.0)
                                )
             )
         elif flag == 1:
@@ -358,14 +358,15 @@ def run(layout: str = "force") -> Graph:
                                target=str(endNode),
                                value=int(link_val),
                                symbol=["none", "none"],
-                               symbol_size=10 + int(link_val / 50),
-                               linestyle_opts=opts.LineStyleOpts(width=3 + 4 * link_val / 10000, type_="solid",
-                                                                 color="orange"),
+                               symbol_size=10 + int(link_val / 10),
+                               linestyle_opts=opts.LineStyleOpts(width=2 + link_val / 20,
+                                                                 type_="solid",
+                                                                 color="#495057",
+                                                                 opacity=0.8),
                                label_opts=opts.LabelOpts(is_show=True, position="middle",
                                                          formatter="{c}",
                                                          distance=1,
-                                                         horizontal_align="center"
-                                                         )
+                                                         horizontal_align="center"),
                                )
             )
         elif flag == 2:
@@ -374,8 +375,8 @@ def run(layout: str = "force") -> Graph:
                                target=str(endNode),
                                value=int(link_val),
                                symbol=["none", "none"],
-                               symbol_size=10 + int(link_val / 50),
-                               linestyle_opts=opts.LineStyleOpts(width=3 + 4 * link_val / 10000, type_="solid",
+                               symbol_size=10 + int(link_val / 10),
+                               linestyle_opts=opts.LineStyleOpts(width=2 + link_val / 20, type_="solid",
                                                                  color="green"),
                                label_opts=opts.LabelOpts(is_show=True, position="middle",
                                                          formatter="{c}",
