@@ -50,15 +50,13 @@ def dump_axies_from_brite(file_name: str, out_file: str, node_n: int, cluster_n:
     # line describe: NodeID, x, y, in_degree, out_degree, as_id, type
     header = ["NodeID", "x", "y", "in_degree", "out_degree", "as_id", "type"]
     df = pd.read_csv(file_name, skiprows=node_line, sep="\t", nrows=int(node_n), names=header)
-    # get x and y axies, zip to list, group by as_id
-    axies = df[["NodeID", "x", "y"]].copy()
     # get total as number
     as_n = df["as_id"].max() + 1
     for i in range(as_n):
         # get axies of each AS
         axies_of_as = df[df["as_id"] == i][["NodeID", "x", "y"]].copy()
         # cluster axies of each AS
-        kmeans = KMeans(n_clusters=cluster_n, random_state=0).fit(axies_of_as)
+        kmeans = KMeans(n_clusters=cluster_n, random_state=0).fit(axies_of_as[["x", "y"]])
         # get cluster center
         cluster_center = kmeans.cluster_centers_
         # get cluster label
@@ -66,7 +64,7 @@ def dump_axies_from_brite(file_name: str, out_file: str, node_n: int, cluster_n:
         # dump axies to output file
         axies_of_as.to_csv(out_file, sep=",", index=False, header=False, mode="a")
 
-    print("Dump axies from brite file success! output file: {}".format(out_file))
+    print(">>> Dump axies from brite file success! output file: {}".format(out_file))
 
 
 def largest_connected_component_subgraph(topology):
@@ -118,7 +116,7 @@ def dump_node_type(file_name: str, out_file: str, recv_ratio: float):
         f.write("switch: {}\n".format(switch))
         f.write("bgn: {}\n".format(bgn))
 
-    print("Dump node type from brite file success! output file: {}".format(out_file))
+    print(">>> Dump node type from brite file success! output file: {}".format(out_file))
 
 
 def dump_topology(file_name: str, out_file: str, node_n: int, edge_n: int):
@@ -141,7 +139,7 @@ def dump_topology(file_name: str, out_file: str, node_n: int, edge_n: int):
     with open(out_file, "w") as f:
         f.write(str(node_n) + " " + str(edge_n) + "\n")
     df.to_csv(out_file, sep="\t", header=False, index=False, mode="a")
-    print("Generate topo done! nodes: {} / edges: {}, output to {}".format(node_n, edge_n, out_file))
+    print(">>> Generate topo done! nodes: {} / edges: {}, output to {}".format(node_n, edge_n, out_file))
 
 
 def extent_brite_topo(file_name: str, out_file: str, one_deg_n: int, sw_ratio: float = 0.3):
@@ -167,12 +165,24 @@ def extent_brite_topo(file_name: str, out_file: str, one_deg_n: int, sw_ratio: f
     deg = dict(deg)
     # get number of nodes
     node_n = topology.number_of_nodes()
-    # get max node id and max edge id
+    # get max node id, max edge id and max as id
     max_node_id = max(topology.nodes())
     max_edge_id = int(lines[-2].split("\t")[0])
-    #! get node list which has degree of the first 30% of the total nodes without bgn
+    max_as_n = topology.nodes[max_node_id].get("AS", 0)
+    # print("max node id: {}, max edge id: {}, max as id: {}".format(max_node_id, max_edge_id, max_as_n))
+    #! >>> get node list in each AS group.
+    #! >>> The node has degree of the first 30% of the total nodes without bgn
     candidate_nodes = [v for v in topology.nodes() if topology.nodes[v]["type"] != "RT_BORDER"]
-    node_list = sorted(candidate_nodes, key=lambda x: deg[x])[:int(len(candidate_nodes) * sw_ratio)]
+    candidate_nodes = sorted(candidate_nodes, key=lambda x: deg[x])
+    candidate_list = [[] for _ in range(max_as_n + 1)]
+    for v in candidate_nodes:
+        candidate_list[topology.nodes[v].get("AS", 0)].append(v)
+    # The first k entries from each group in candidate_list are taken equally to form a node list
+    k = int(len(candidate_nodes) * sw_ratio) // (max_as_n + 1)
+    node_list = []
+    for i in range(max_as_n + 1):
+        node_list.extend(candidate_list[i][:k])
+    # print("node_list: {}".format(node_list))
     # get edge line, (insert row index is edge line - 1)
     edge_line = findEdgesLine(file_name) - 1
     for i in range(one_deg_n):
@@ -202,11 +212,11 @@ if __name__ == '__main__':
     # path = ""
     input_file = path + "test_seanrs2.brite"
     extend_input_file = path + "test_seanrs2_extend.brite"
-    extent_brite_topo(input_file, extend_input_file, 20)
+    extent_brite_topo(input_file, extend_input_file, 40, 1.0)
     topo_file = path + "topo.txt"
     out_layout_file = path + "layout.txt"
     out_node_type_file = path + "node_type.txt"
     node_num, edges_num = getNodesAndEdgesNumber(extend_input_file)
     dump_topology(extend_input_file, topo_file, node_num, edges_num)  # Generate topology file
+    dump_node_type(extend_input_file, out_node_type_file, 0.8)  # Generate node type file
     dump_axies_from_brite(extend_input_file, out_layout_file, node_num, 3)  # Generate layout file
-    dump_node_type(extend_input_file, out_node_type_file, 0.5)  # Generate node type file
