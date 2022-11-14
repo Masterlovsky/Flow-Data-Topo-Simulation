@@ -318,6 +318,7 @@ class GraphNode(BasicOpts):
         symbol_size: Union[Numeric, Sequence, None] = None,
         label_opts: Union[LabelOpts, dict, None] = None,
         itemstyle_opts: Union[ItemStyleOpts, dict, None] = None,
+        tooltip_opts: Union[TooltipOpts, dict, None] = None,
     ):
         self.opts: dict = {
             "name": name,
@@ -330,6 +331,7 @@ class GraphNode(BasicOpts):
             "symbolSize": symbol_size,
             "label": label_opts,
             "itemStyle": itemstyle_opts,
+            "tooltip": tooltip_opts,
         }
 
 

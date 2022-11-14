@@ -170,8 +170,8 @@ def extent_brite_topo(file_name: str, out_file: str, one_deg_n: int, sw_ratio: f
     max_edge_id = int(lines[-2].split("\t")[0])
     max_as_n = topology.nodes[max_node_id].get("AS", 0)
     # print("max node id: {}, max edge id: {}, max as id: {}".format(max_node_id, max_edge_id, max_as_n))
-    #! >>> get node list in each AS group.
-    #! >>> The node has degree of the first 30% of the total nodes without bgn
+    # ! >>> get node list in each AS group.
+    # ! >>> The node has degree of the first 30% of the total nodes without bgn
     candidate_nodes = [v for v in topology.nodes() if topology.nodes[v]["type"] != "RT_BORDER"]
     candidate_nodes = sorted(candidate_nodes, key=lambda x: deg[x])
     candidate_list = [[] for _ in range(max_as_n + 1)]

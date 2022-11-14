@@ -47,12 +47,12 @@ def g_make(nodes, links, categories, layout) -> Graph:
 
 
 def load_flow_data(file: str):
-    flow_arr = np.loadtxt(file, delimiter=" ", dtype=int)
+    flow_arr = np.loadtxt(file, delimiter=" ").astype(np.float64)
     return flow_arr
 
 
 def load_topology_data(file: str):
-    topo_arr = np.loadtxt(file, dtype=int, skiprows=1)
+    topo_arr = np.loadtxt(file, skiprows=1).astype(int)
     return topo_arr
 
 
