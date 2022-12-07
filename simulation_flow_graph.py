@@ -21,7 +21,7 @@ def g_make(nodes, links, categories, layout) -> Graph:
                 animation_opts=opts.AnimationOpts()
             )
         )
-            .add(
+        .add(
             "",
             nodes,
             links,
@@ -32,8 +32,8 @@ def g_make(nodes, links, categories, layout) -> Graph:
             tooltip_opts=opts.TooltipOpts(formatter="ID:{b}, Load:{c}"),
             # itemstyle_opts=opts.ItemStyleOpts(color="rgb(230,73,74)", border_color="rgb(255,148,149)", border_width=3)
         )
-            .set_global_opts(
-            title_opts=opts.TitleOpts(title="Simulation_Flow_Graph"),
+        .set_global_opts(
+            title_opts=opts.TitleOpts(title="Simulation_Flow_Graph", subtitle="Link unit: " + link_unit),
             legend_opts=opts.LegendOpts(legend_icon="circle"),
             toolbox_opts=opts.ToolboxOpts(is_show=True, orient="vertical", pos_left="right",
                                           feature=opts.ToolBoxFeatureOpts(
@@ -79,11 +79,11 @@ def load_axis_to_dict(file: str) -> dict:
         lines_list = f.readlines()
     for index, line in enumerate(lines_list):
         nodes_list = line.strip().split(",")
-        if len(nodes_list) != 4:
+        if len(nodes_list) not in (4, 5):
             if index == 0:
                 print("Warning, wrong format in node_axis.txt file!")
             continue
-        _x, _y, _ctrl = float(nodes_list[1]), float(nodes_list[2]), int(nodes_list[3])
+        _x, _y, _ctrl = float(nodes_list[1]), float(nodes_list[2]), int(nodes_list[-1])
         node_axis_dict[nodes_list[0]] = (_x, _y, _ctrl)
     return node_axis_dict
 
@@ -293,7 +293,7 @@ def run(layout: str = "force") -> Graph:
     nodes = {}  # 存放所有节点的集合
     symbol_list = ["circle", "roundRect", "rect", "triangle", "diamond"]  # 分别代表router, receiver，source，switch，bgn
     labels_tuple = ("RCV", "SRC", "SW", "BGN")
-    # 创建节点 ======================================================================
+    # ! 创建节点 ======================================================================
     for line in all_data:
         startNode, endNode, s_cat, e_cat, s_val, e_val = line[:6]
         nodes[startNode] = (s_val, s_cat, type_data.get(str(startNode), 0))
@@ -302,7 +302,8 @@ def run(layout: str = "force") -> Graph:
     for key in nodes.keys():
         _name = str(key)
         _ctrl = 0  # 标记属于哪个控制域
-        _symbol_size = NODE_NORMAL_SIZE + int(nodes[key][0] / 100) * 3 if int(nodes[key][0] / 100) else NODE_NORMAL_SIZE
+        _symbol_size = NODE_NORMAL_SIZE + int(nodes[key][0] / flow_data_size) if int(
+            nodes[key][0]) else NODE_NORMAL_SIZE
         # 对特殊节点进行单独标识 -----------------------------------------------------
         if nodes[key][2] > 0:
             _symbol_size = _symbol_size * 1.2
@@ -310,7 +311,7 @@ def run(layout: str = "force") -> Graph:
             _formatter = labels_tuple[nodes[key][2] - 1] + ":{b}, load,ctrl:{c} "
             # _item_style_opts = opts.ItemStyleOpts(border_width=2, border_color="red")
             _item_style_opts = None
-            _label_opts = opts.LabelOpts(position="bottom", font_size=14, font_weight="bold",
+            _label_opts = opts.LabelOpts(is_show=True, position="bottom", font_size=14, font_weight="bold",
                                          formatter=_label_formatter)
             _tooltip_opts = opts.TooltipOpts(trigger="item", formatter=_formatter)
         # 普通节点标识 --------------------------------------------------------------
@@ -341,14 +342,14 @@ def run(layout: str = "force") -> Graph:
                            itemstyle_opts=_item_style_opts  # 如果没改源码需要把这行注释掉！
                            )
         )
-    # 创建边 ========================================================================
+    # ! 创建边 ========================================================================
     for line in all_data:
         startNode, endNode, s_cat, e_cat, s_val, e_val, link_val, flag = line
         # color_r = str(150 - link_val)
         # color = "rgb(" + color_r + "," + color_r + "," + color_r + ")"
         if flag == 0:
             links_data.append(
-                opts.GraphLink(source=str(startNode), target=str(endNode), value=int(link_val),
+                opts.GraphLink(source=str(startNode), target=str(endNode), value=round(link_val / flow_data_size, 2),
                                linestyle_opts=opts.LineStyleOpts(width=1.0)
                                )
             )
@@ -356,10 +357,10 @@ def run(layout: str = "force") -> Graph:
             links_data.append(
                 opts.GraphLink(source=str(startNode),
                                target=str(endNode),
-                               value=int(link_val),
+                               value=round(link_val / flow_data_size, 2),
                                symbol=["none", "none"],
-                               symbol_size=10 + int(link_val / 10),
-                               linestyle_opts=opts.LineStyleOpts(width=2 + link_val / 20,
+                               symbol_size=10 + int(link_val / flow_data_size),
+                               linestyle_opts=opts.LineStyleOpts(width=2 + link_val / flow_data_size,
                                                                  type_="solid",
                                                                  color="#495057",
                                                                  opacity=0.8),
@@ -367,6 +368,7 @@ def run(layout: str = "force") -> Graph:
                                                          formatter="{c}",
                                                          distance=1,
                                                          horizontal_align="center"),
+
                                )
             )
         elif flag == 2:
@@ -375,8 +377,8 @@ def run(layout: str = "force") -> Graph:
                                target=str(endNode),
                                value=int(link_val),
                                symbol=["none", "none"],
-                               symbol_size=10 + int(link_val / 10),
-                               linestyle_opts=opts.LineStyleOpts(width=2 + link_val / 20, type_="solid",
+                               symbol_size=10 + int(link_val / flow_data_size),
+                               linestyle_opts=opts.LineStyleOpts(width=2 + link_val / flow_data_size, type_="solid",
                                                                  color="green"),
                                label_opts=opts.LabelOpts(is_show=True, position="middle",
                                                          formatter="{c}",
@@ -415,13 +417,15 @@ def run(layout: str = "force") -> Graph:
 
 if __name__ == '__main__':
     data_source_dir = "topoGen/topology/"
-    topo_file = data_source_dir + "topo.txt"
+    topo_file = data_source_dir + "topo5x20.txt"
     # topo_file = "topoGen/test_topo.txt"
     flow_data_file = data_source_dir + "flow_data.txt"
     flow_data_new_file = data_source_dir + "flow_data_new.txt"
-    layout_file = data_source_dir + "layout.txt"
-    node_type_file = data_source_dir + "node_type.txt"
+    layout_file = data_source_dir + "layout5x20.txt"
+    node_type_file = data_source_dir + "node_type5x20.txt"
     NODE_NORMAL_SIZE = 15  # Identifies the standard size of a common no-flow node
+    flow_data_size = 10 ** 4  # The magnitude of traffic data
+    link_unit = "10KB"  # The unit of traffic data, need to change with the above line
     graph = run(layout="force")
     print("done!")
 #   定时10s刷新html页面
