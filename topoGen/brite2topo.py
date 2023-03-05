@@ -57,7 +57,7 @@ def dump_axies_from_brite(brite_file: str, out_file: str, node_n: int, cluster_n
         # get axies of each AS
         axies_of_as = df[df["as_id"] == i][["NodeID", "x", "y", "as_id"]].copy()
         # cluster axies of each AS
-        kmeans = KMeans(n_clusters=cluster_n, random_state=0).fit(axies_of_as[["x", "y"]])
+        kmeans = KMeans(n_clusters=cluster_n, random_state=0, n_init='auto').fit(axies_of_as[["x", "y"]])
         # get cluster center
         cluster_center = kmeans.cluster_centers_
         # get cluster label
@@ -248,16 +248,20 @@ def check_layout_valid(layout_file: str, node_type_file: str, k: int):
 
 
 if __name__ == '__main__':
-    path = "topology/"  # brite file path
+    RECV_RAT = 0.8  # The ratio of receiver nodes compared to source nodes
+    SW_RAT = 0.8  # The ratio of switch candidates in all routers
+    END_POINT_NUM = 7500  # The number of end points(source + receiver)
+    CONTROLLER_NUM = 10  # The number of controllers in each AS
+    path = "topology/seanrs_50x300/"  # brite file path
     # path = ""
-    input_file = path + "seanrs10x100.brite"
-    extend_input_file = path + "seanrs10x100_extend.brite"
-    extent_brite_topo(input_file, extend_input_file, 400, 0.8)
-    topo_file = path + "topo10x100.txt"
-    out_layout_file = path + "layout10x100.txt"
-    out_node_type_file = path + "node_type10x100.txt"
+    input_file = path + "seanrs_50x300.brite"
+    extend_input_file = path + "seanrs_50x300_extend.brite"
+    extent_brite_topo(input_file, extend_input_file, END_POINT_NUM, SW_RAT)
+    topo_file = path + "topo50x300.txt"
+    out_layout_file = path + "layout50x300.txt"
+    out_node_type_file = path + "node_type50x300.txt"
     node_num, edges_num = getNodesAndEdgesNumber(extend_input_file)
     dump_topology(extend_input_file, topo_file, node_num, edges_num)  # Generate topology file
-    dump_node_type(extend_input_file, out_node_type_file, 0.8)  # Generate node type file
-    dump_axies_from_brite(extend_input_file, out_layout_file, node_num, 6)  # Generate layout file
-    print(">>> Check_layout_valid: ", check_layout_valid(out_layout_file, out_node_type_file, 6))
+    dump_node_type(extend_input_file, out_node_type_file, RECV_RAT)  # Generate node type file
+    dump_axies_from_brite(extend_input_file, out_layout_file, node_num, CONTROLLER_NUM)  # Generate layout file
+    print(">>> Check_layout_valid: ", check_layout_valid(out_layout_file, out_node_type_file, CONTROLLER_NUM))

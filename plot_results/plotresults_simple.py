@@ -95,19 +95,20 @@ def run(input_file, output_path):
     #  ========= plot mean delay line chart =========
     # input a xlsx file, read from excel to pandas dataframe
     # df = pd.read_excel(input_file, sheet_name="delay", skiprows=1, dtype="float")
-    # plot_mean_delay_chart(df, "Node number", "delay(ms)", "Mean delay", output_path + "/mean_delay.pdf")
+    # plot_mean_delay_chart(df, "Node number", "delay(ms)", "", output_path + "/mean_delay.pdf")
     #  ========= plot bar chart =========
-    # data = [9917, 8968, 4516]
-    # data = [89, 513, 4498]
-    # plot_bar_chart(data, "Resolve hit in domains", output_path + "/MDHT-level-hit.pdf")
+    data = [9917, 8968, 4516]  # DINNRS
+    plot_bar_chart(data, "", output_path + "/DINNRS-domain-hit.pdf")
+    # data = [89, 513, 4498]  # MDHT
+    # plot_bar_chart(data, "", output_path + "/MDHT-level-hit.pdf")
     # ========== plot load-rate line chart =========
-    df = pd.read_excel(input_file, sheet_name="load", skiprows=1, dtype="float")
-    plot_load_rate_chart(df, "Request rate(/s)", "Average link load (KB)", "Average link load",
-                         output_path + "/load_rate.pdf")
-    # ========== plot internal ratio chart =========
-    df = pd.read_excel(input_file, sheet_name="load", skiprows=1, dtype="float")
-    plot_internal_ratio(df, "Request rate(/s)", "Internal ratio", "Internal ratio",
-                        output_path + "/internal_ratio.pdf")
+    # df = pd.read_excel(input_file, sheet_name="load", skiprows=1, dtype="float")
+    # plot_load_rate_chart(df, "Request rate(/s)", "Average link load (KB)", "",
+    #                      output_path + "/load_rate.pdf")
+    # # ========== plot internal ratio chart =========
+    # df = pd.read_excel(input_file, sheet_name="load", skiprows=1, dtype="float")
+    # plot_internal_ratio(df, "Request rate(/s)", "Internal ratio", "",
+    #                     output_path + "/internal_ratio.pdf")
 
 
 def main():

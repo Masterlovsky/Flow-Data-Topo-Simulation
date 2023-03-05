@@ -33,7 +33,7 @@ def g_make(nodes, links, categories, layout) -> Graph:
             # itemstyle_opts=opts.ItemStyleOpts(color="rgb(230,73,74)", border_color="rgb(255,148,149)", border_width=3)
         )
         .set_global_opts(
-            title_opts=opts.TitleOpts(title="Simulation_Flow_Graph", subtitle="Link unit: " + link_unit),
+            title_opts=opts.TitleOpts(title="Simulation_Flow_Graph", subtitle="Link unit: " + TRAFFIC_UNIT_PRINT),
             legend_opts=opts.LegendOpts(legend_icon="circle"),
             toolbox_opts=opts.ToolboxOpts(is_show=True, orient="vertical", pos_left="right",
                                           feature=opts.ToolBoxFeatureOpts(
@@ -302,7 +302,7 @@ def run(layout: str = "force") -> Graph:
     for key in nodes.keys():
         _name = str(key)
         _ctrl = 0  # 标记属于哪个控制域
-        _symbol_size = NODE_NORMAL_SIZE + int(nodes[key][0] / flow_data_size) if int(
+        _symbol_size = NODE_NORMAL_SIZE + int(nodes[key][0] / TRAFFIC_UNIT) if int(
             nodes[key][0]) else NODE_NORMAL_SIZE
         # 对特殊节点进行单独标识 -----------------------------------------------------
         if nodes[key][2] > 0:
@@ -333,7 +333,7 @@ def run(layout: str = "force") -> Graph:
             opts.GraphNode(name=_name,
                            x=_x, y=_y, is_fixed=_is_fixed,
                            symbol=str(symbol_list[nodes[key][2]]),
-                           # symbol="image://pics/接入交换机.svg",
+                           # symbol="image://pics/acc-sw.svg",
                            symbol_size=_symbol_size,
                            value=[str(nodes[key][0]), _ctrl],
                            category=int(nodes[key][1] - 1),
@@ -349,7 +349,7 @@ def run(layout: str = "force") -> Graph:
         # color = "rgb(" + color_r + "," + color_r + "," + color_r + ")"
         if flag == 0:
             links_data.append(
-                opts.GraphLink(source=str(startNode), target=str(endNode), value=round(link_val / flow_data_size, 2),
+                opts.GraphLink(source=str(startNode), target=str(endNode), value=round(link_val / TRAFFIC_UNIT, 2),
                                linestyle_opts=opts.LineStyleOpts(width=1.0)
                                )
             )
@@ -357,10 +357,10 @@ def run(layout: str = "force") -> Graph:
             links_data.append(
                 opts.GraphLink(source=str(startNode),
                                target=str(endNode),
-                               value=round(link_val / flow_data_size, 2),
+                               value=round(link_val / TRAFFIC_UNIT, 2),
                                symbol=["none", "none"],
-                               symbol_size=10 + int(link_val / flow_data_size),
-                               linestyle_opts=opts.LineStyleOpts(width=2 + link_val / flow_data_size,
+                               symbol_size=10 + int(link_val / TRAFFIC_UNIT),
+                               linestyle_opts=opts.LineStyleOpts(width=2 + link_val / TRAFFIC_UNIT,
                                                                  type_="solid",
                                                                  color="#495057",
                                                                  opacity=0.8),
@@ -377,8 +377,8 @@ def run(layout: str = "force") -> Graph:
                                target=str(endNode),
                                value=int(link_val),
                                symbol=["none", "none"],
-                               symbol_size=10 + int(link_val / flow_data_size),
-                               linestyle_opts=opts.LineStyleOpts(width=2 + link_val / flow_data_size, type_="solid",
+                               symbol_size=10 + int(link_val / TRAFFIC_UNIT),
+                               linestyle_opts=opts.LineStyleOpts(width=2 + link_val / TRAFFIC_UNIT, type_="solid",
                                                                  color="green"),
                                label_opts=opts.LabelOpts(is_show=True, position="middle",
                                                          formatter="{c}",
@@ -417,15 +417,15 @@ def run(layout: str = "force") -> Graph:
 
 if __name__ == '__main__':
     data_source_dir = "topoGen/topology/"
-    topo_file = data_source_dir + "topo5x20.txt"
+    topo_file = data_source_dir + "topo10x100.txt"
     # topo_file = "topoGen/test_topo.txt"
     flow_data_file = data_source_dir + "flow_data.txt"
     flow_data_new_file = data_source_dir + "flow_data_new.txt"
-    layout_file = data_source_dir + "layout5x20.txt"
-    node_type_file = data_source_dir + "node_type5x20.txt"
+    layout_file = data_source_dir + "layout10x100.txt"
+    node_type_file = data_source_dir + "node_type10x100.txt"
     NODE_NORMAL_SIZE = 15  # Identifies the standard size of a common no-flow node
-    flow_data_size = 10 ** 4  # The magnitude of traffic data
-    link_unit = "10KB"  # The unit of traffic data, need to change with the above line
+    TRAFFIC_UNIT = 10 ** 7  # * The magnitude of traffic data
+    TRAFFIC_UNIT_PRINT = "10M"  # * The unit of traffic data for print, need to change with the TRAFFIC_UNIT
     graph = run(layout="force")
     print("done!")
 #   定时10s刷新html页面
