@@ -2,12 +2,26 @@
 # -*- encoding:utf-8 -*-
 import os
 
+from tqdm import tqdm
+
 from pyecharts import options as opts
 from pyecharts.globals import ThemeType
 from pyecharts.charts import Graph
 import numpy as np
 import pandas as pd
 import json
+import logging
+
+# Logger object
+logger = logging.getLogger("main")
+# set default logging level to INFO
+logger.setLevel(logging.INFO)
+# set logging format
+formatter = logging.Formatter("[%(asctime)s]-[%(name)s]-[%(levelname)s] : %(message)s")
+# set logging handler
+handler = logging.StreamHandler()
+handler.setFormatter(formatter)
+logger.addHandler(handler)
 
 
 def g_make(nodes, links, categories, layout) -> Graph:
@@ -47,16 +61,19 @@ def g_make(nodes, links, categories, layout) -> Graph:
 
 
 def load_flow_data(file: str):
+    logger.info("Loading flow data from file: {}".format(file))
     flow_arr = np.loadtxt(file, delimiter=" ").astype(np.float64)
     return flow_arr
 
 
 def load_topology_data(file: str):
+    logger.info("Loading topology data from file: {}".format(file))
     topo_arr = np.loadtxt(file, skiprows=1).astype(int)
     return topo_arr
 
 
 def load_type_data(file: str) -> dict:
+    logger.info("Loading node type data from file: {}".format(file))
     nodes_type_dict = {}
     with open(file, 'r') as f:
         lines_list = f.readlines()
@@ -72,6 +89,7 @@ def load_type_data(file: str) -> dict:
 
 
 def load_axis_to_dict(file: str) -> dict:
+    logger.info("Loading node axis data from file: {}".format(file))
     node_axis_dict = {}
     _x = None
     _y = None
@@ -111,9 +129,10 @@ def dataHandler(flow_arr: np.ndarray, flow_new_arr: np.ndarray, topo_arr: np.nda
     :param topo_arr: 节点拓扑数组
     :return:  整合之后的数组
     """
+    logger.info("Data handler start...")
     topo_arr = np.hstack((topo_arr, np.zeros((len(topo_arr), 4), dtype=int)))
     # 使用flow_arr中的每一行更新topo_arr
-    for flow_line in flow_arr:
+    for flow_line in tqdm(flow_arr, desc="update flow_arr: "):
         for topo_line in topo_arr:
             if flow_line[0] == topo_line[0]:
                 topo_line[4] = flow_line[2]
@@ -131,7 +150,7 @@ def dataHandler(flow_arr: np.ndarray, flow_new_arr: np.ndarray, topo_arr: np.nda
                 topo_line[7] = 1
 
     # 使用flow_new_arr中的每一行更新topo_arr
-    for flow_line in flow_new_arr:
+    for flow_line in tqdm(flow_new_arr, desc="update flow_new_arr: "):
         for topo_line in topo_arr:
             if flow_line[0] == topo_line[0]:
                 topo_line[4] = flow_line[2]
@@ -299,7 +318,7 @@ def run(layout: str = "force") -> Graph:
         nodes[startNode] = (s_val, s_cat, type_data.get(str(startNode), 0))
         nodes[endNode] = (e_val, e_cat, type_data.get(str(endNode), 0))
     # print(nodes.keys())
-    for key in nodes.keys():
+    for key in tqdm(nodes.keys(), desc="Creating Nodes: "):
         _name = str(key)
         _ctrl = 0  # 标记属于哪个控制域
         _symbol_size = NODE_NORMAL_SIZE + int(nodes[key][0] / TRAFFIC_UNIT) if int(
@@ -343,7 +362,7 @@ def run(layout: str = "force") -> Graph:
                            )
         )
     # ! 创建边 ========================================================================
-    for line in all_data:
+    for line in tqdm(all_data, desc="Creating Links: "):
         startNode, endNode, s_cat, e_cat, s_val, e_val, link_val, flag = line
         # color_r = str(150 - link_val)
         # color = "rgb(" + color_r + "," + color_r + "," + color_r + ")"
@@ -395,6 +414,7 @@ def run(layout: str = "force") -> Graph:
         )
     # 生成关系图 =======================================================================
     graph_ = g_make(nodes_data, links_data, category_data, layout)
+    logger.info("Graph Created!")
 
     # 增加鼠标拖动点固定位置的js代码
     graph_.add_js_funcs(
@@ -416,13 +436,13 @@ def run(layout: str = "force") -> Graph:
 
 
 if __name__ == '__main__':
-    data_source_dir = "topoGen/topology/"
-    topo_file = data_source_dir + "topo10x100.txt"
+    data_source_dir = "topoGen/topology/seanrs_50x200/"
+    topo_file = data_source_dir + "topo50x200.txt"
     # topo_file = "topoGen/test_topo.txt"
     flow_data_file = data_source_dir + "flow_data.txt"
     flow_data_new_file = data_source_dir + "flow_data_new.txt"
-    layout_file = data_source_dir + "layout10x100.txt"
-    node_type_file = data_source_dir + "node_type10x100.txt"
+    layout_file = data_source_dir + "layout50x200.txt"
+    node_type_file = data_source_dir + "node_type50x200.txt"
     NODE_NORMAL_SIZE = 15  # Identifies the standard size of a common no-flow node
     TRAFFIC_UNIT = 10 ** 7  # * The magnitude of traffic data
     TRAFFIC_UNIT_PRINT = "10M"  # * The unit of traffic data for print, need to change with the TRAFFIC_UNIT

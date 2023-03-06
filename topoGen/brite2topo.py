@@ -252,14 +252,14 @@ if __name__ == '__main__':
     SW_RAT = 0.8  # The ratio of switch candidates in all routers
     END_POINT_NUM = 7500  # The number of end points(source + receiver)
     CONTROLLER_NUM = 10  # The number of controllers in each AS
-    path = "topology/seanrs_50x300/"  # brite file path
+    path = "topology/seanrs_50x200/"  # brite file path
     # path = ""
-    input_file = path + "seanrs_50x300.brite"
-    extend_input_file = path + "seanrs_50x300_extend.brite"
+    input_file = path + "seanrs50x200.brite"
+    extend_input_file = path + "seanrs50x200_extend.brite"
     extent_brite_topo(input_file, extend_input_file, END_POINT_NUM, SW_RAT)
-    topo_file = path + "topo50x300.txt"
-    out_layout_file = path + "layout50x300.txt"
-    out_node_type_file = path + "node_type50x300.txt"
+    topo_file = path + "topo50x200.txt"
+    out_layout_file = path + "layout50x200.txt"
+    out_node_type_file = path + "node_type50x200.txt"
     node_num, edges_num = getNodesAndEdgesNumber(extend_input_file)
     dump_topology(extend_input_file, topo_file, node_num, edges_num)  # Generate topology file
     dump_node_type(extend_input_file, out_node_type_file, RECV_RAT)  # Generate node type file
