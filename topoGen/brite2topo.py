@@ -36,11 +36,12 @@ def getNodesAndEdgesNumber(file_name: str) -> tuple:
         return numbers[0], numbers[1]
 
 
-def dump_axies_from_brite(brite_file: str, out_file: str, node_n: int, cluster_n: int):
+def dump_axis_from_brite(brite_file: str, node_type_file: str, out_file: str, node_n: int, cluster_n: int):
     """
-    Get axies information from brite file
+    Get axis information from brite file
     :param cluster_n: controller number in each AS
     :param brite_file: input brite file name
+    :param node_type_file: input layout file name
     :param out_file: output file name (layout file)
     :param node_n: total node number
     """
@@ -53,17 +54,40 @@ def dump_axies_from_brite(brite_file: str, out_file: str, node_n: int, cluster_n
     df = pd.read_csv(brite_file, skiprows=node_line, sep="\t", nrows=int(node_n), names=header)
     # get total as number
     as_n = df["as_id"].max() + 1
+    # get all switches in node_type_file(line3)
+    with open(node_type_file, 'r') as f:
+        lines = f.readlines()
+        switches = set(eval(lines[2].split(":")[1].strip()))
+        clients = set(eval(lines[0].split(":")[1].strip()) + eval(lines[1].split(":")[1].strip()))
+
+    # get access switch of each client, save to a dict
+    topology = fnss.parse_brite(brite_file).to_undirected()
+    topology = largest_connected_component_subgraph(topology)
+    c2sw = {}
+    for client in clients:
+        c2sw[client] = list(topology.neighbors(client))[0]
+
     for i in range(as_n):
-        # get axies of each AS
-        axies_of_as = df[df["as_id"] == i][["NodeID", "x", "y", "as_id"]].copy()
-        # cluster axies of each AS
-        kmeans = KMeans(n_clusters=cluster_n, random_state=0, n_init='auto').fit(axies_of_as[["x", "y"]])
+        # get axis of each AS
+        axis_of_as = df[df["as_id"] == i][["NodeID", "x", "y", "as_id"]]
+        # sieve NodeID in switches in df: axis_of_as
+        axis_of_as_sw = axis_of_as[axis_of_as["NodeID"].isin(switches)].copy()
+        axis_without_sw = axis_of_as[~axis_of_as["NodeID"].isin(switches | clients)].copy()
+        # cluster axis of each AS
+        kmeans = KMeans(n_clusters=cluster_n, random_state=0, n_init='auto').fit(axis_of_as_sw[["x", "y"]])
         # get cluster center
         cluster_center = kmeans.cluster_centers_
         # get cluster label
-        axies_of_as["ctrl_area"] = kmeans.labels_
+        axis_of_as_sw["ctrl_area"] = kmeans.labels_
         # dump axies to output file
-        axies_of_as.to_csv(out_file, sep=",", index=False, header=False, mode="a")
+        axis_of_as_sw.to_csv(out_file, sep=",", index=False, header=False, mode="a")
+        # put other nodes(without switches and clients) into the right cluster use k-means
+        axis_without_sw["ctrl_area"] = kmeans.predict(axis_without_sw[["x", "y"]])
+        axis_without_sw.to_csv(out_file, sep=",", index=False, header=False, mode="a")
+        # put clients into the right cluster use the same value of access switch's ctrl_area
+        axis_of_as_cl = axis_of_as[axis_of_as["NodeID"].isin(clients)].copy()
+        axis_of_as_cl["ctrl_area"] = axis_of_as_cl["NodeID"].map(c2sw).map(axis_of_as_sw.set_index("NodeID")["ctrl_area"])
+        axis_of_as_cl.to_csv(out_file, sep=",", index=False, header=False, mode="a")
 
     print(">>> Dump axies from brite file success! output file: {}".format(out_file))
 
@@ -117,7 +141,8 @@ def dump_node_type(file_name: str, out_file: str, recv_ratio: float):
         f.write("switch: {}\n".format(switch))
         f.write("bgn: {}\n".format(bgn))
 
-    print(">>> Dump node type from brite file success! output file: {}".format(out_file))
+    nodes_count = len(receiver) + len(switch) + len(source) + len(bgn) + len(router)
+    print(">>> Dump {} nodes type from brite file success! output file: {}".format(nodes_count, out_file))
 
 
 def dump_topology(file_name: str, out_file: str, node_n: int, edge_n: int):
@@ -251,17 +276,18 @@ if __name__ == '__main__':
     RECV_RAT = 0.8  # The ratio of receiver nodes compared to source nodes
     SW_RAT = 0.8  # The ratio of switch candidates in all routers
     END_POINT_NUM = 7500  # The number of end points(source + receiver)
-    CONTROLLER_NUM = 20  # The number of controllers in each AS
+    CONTROLLER_NUM = 50  # The number of controllers in each AS
     path = "topology/seanrs_50x200/"  # brite file path
     # path = ""
-    input_file = path + "seanrs50x200.brite"
-    extend_input_file = path + "seanrs50x200_extend.brite"
-    extent_brite_topo(input_file, extend_input_file, END_POINT_NUM, SW_RAT)
+    brite_file = path + "seanrs50x200.brite"
+    extend_brite_file = path + "seanrs50x200_extend.brite"
+    extent_brite_topo(brite_file, extend_brite_file, END_POINT_NUM, SW_RAT)
     topo_file = path + "topo50x200.txt"
-    out_layout_file = path + "layout50x200.txt"
-    out_node_type_file = path + "node_type50x200.txt"
-    node_num, edges_num = getNodesAndEdgesNumber(extend_input_file)
-    dump_topology(extend_input_file, topo_file, node_num, edges_num)  # Generate topology file
-    dump_node_type(extend_input_file, out_node_type_file, RECV_RAT)  # Generate node type file
-    dump_axies_from_brite(extend_input_file, out_layout_file, node_num, CONTROLLER_NUM)  # Generate layout file
-    print(">>> Check_layout_valid: ", check_layout_valid(out_layout_file, out_node_type_file, CONTROLLER_NUM))
+    layout_file = path + "layout50x200.txt"
+    node_type_file = path + "node_type50x200.txt"
+    node_num, edges_num = getNodesAndEdgesNumber(extend_brite_file)
+    dump_topology(extend_brite_file, topo_file, node_num, edges_num)  # Generate topology file
+    dump_node_type(extend_brite_file, node_type_file, RECV_RAT)  # Generate node type file
+    dump_axis_from_brite(extend_brite_file, node_type_file, layout_file, node_num,
+                         CONTROLLER_NUM)  # Generate layout file
+    print(">>> Check_layout_valid: ", check_layout_valid(layout_file, node_type_file, CONTROLLER_NUM))
