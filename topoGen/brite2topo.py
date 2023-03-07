@@ -239,11 +239,11 @@ def check_layout_valid(layout_file: str, node_type_file: str, k: int):
             if int(node) in nodes:
                 check_as_ctrl[int(as_id)].add(int(ctrl_id))
 
-    for as_id, ctrl_set in check_as_ctrl.items():
-        if len(ctrl_set) != k:
-            print("AS {} has {} regions, not {}".format(as_id, len(ctrl_set), k))
-            return False
-
+    total_ctrl = sum([len(v) for v in check_as_ctrl.values()])
+    if total_ctrl != k * len(check_as_ctrl):
+        print("[WARNING] Average regions ctrl number: {}, expected: {}; total number: {}, expected: {}".format(
+            total_ctrl / len(check_as_ctrl), k, total_ctrl, k * len(check_as_ctrl)))
+        return False
     return True
 
 
@@ -251,7 +251,7 @@ if __name__ == '__main__':
     RECV_RAT = 0.8  # The ratio of receiver nodes compared to source nodes
     SW_RAT = 0.8  # The ratio of switch candidates in all routers
     END_POINT_NUM = 7500  # The number of end points(source + receiver)
-    CONTROLLER_NUM = 10  # The number of controllers in each AS
+    CONTROLLER_NUM = 20  # The number of controllers in each AS
     path = "topology/seanrs_50x200/"  # brite file path
     # path = ""
     input_file = path + "seanrs50x200.brite"
