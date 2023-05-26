@@ -47,7 +47,7 @@ def g_make(nodes, links, categories, layout) -> Graph:
             # itemstyle_opts=opts.ItemStyleOpts(color="rgb(230,73,74)", border_color="rgb(255,148,149)", border_width=3)
         )
         .set_global_opts(
-            title_opts=opts.TitleOpts(title="Simulation_Flow_Graph", subtitle="Link unit: " + TRAFFIC_UNIT_PRINT),
+            title_opts=opts.TitleOpts(title="Simulation_Topology_Graph", subtitle="Link unit: " + TRAFFIC_UNIT_PRINT),
             legend_opts=opts.LegendOpts(legend_icon="circle"),
             toolbox_opts=opts.ToolboxOpts(is_show=True, orient="vertical", pos_left="right",
                                           feature=opts.ToolBoxFeatureOpts(
@@ -283,9 +283,10 @@ def get_node_num(nodes: dict) -> None:
     print(json.dumps(num_dict, sort_keys=True, indent=4))
 
 
-def run(layout: str = "force") -> Graph:
+def run(layout: str = "force", title="Simulation_Flow_Graph") -> Graph:
     """
     主函数，按照需求生成所有节点和边，并渲染输出
+    :param title: 生成html文件的标题
     :return: Graph 对象
     :param layout: 共三种方式，"force","manual","file"
     "force"   是力引导模型，用于调试，可以拖动;
@@ -430,19 +431,20 @@ def run(layout: str = "force") -> Graph:
         )
         '''
     )
-    graph_.render("Simulation_Flow_Graph.html")
+    graph_.render(title + ".html")
     get_node_num(nodes)  # 获取每个社区的节点数目
     return graph_
 
 
 if __name__ == '__main__':
-    data_source_dir = "topoGen/topology/seanrs_50x200/"
-    topo_file = data_source_dir + "topo50x200.txt"
-    # topo_file = "topoGen/test_topo.txt"
+    # data_source_dir = "topoGen/topology/seanrs_50x200/"
+    data_source_dir = "data_source/"
+    # topo_file = data_source_dir + "topo50x200.txt"
+    topo_file = data_source_dir + "community_small.txt"
     flow_data_file = data_source_dir + "flow_data.txt"
     flow_data_new_file = data_source_dir + "flow_data_new.txt"
-    layout_file = data_source_dir + "layout50x200.txt"
-    node_type_file = data_source_dir + "node_type50x200.txt"
+    layout_file = data_source_dir + "layout.txt"
+    node_type_file = data_source_dir + "node_type.txt"
     NODE_NORMAL_SIZE = 15  # Identifies the standard size of a common no-flow node
     TRAFFIC_UNIT = 10 ** 7  # * The magnitude of traffic data
     TRAFFIC_UNIT_PRINT = "10M"  # * The unit of traffic data for print, need to change with the TRAFFIC_UNIT

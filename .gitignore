@@ -102,3 +102,4 @@ example/*.html
 
 # mypy
 .mypy_cache/
+data_source/
