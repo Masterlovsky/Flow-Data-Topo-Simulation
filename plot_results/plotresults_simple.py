@@ -12,13 +12,17 @@ import seaborn as sns
 # Logger object
 logger = logging.getLogger("plot")
 sns.set_context("paper", font_scale=1.25)
+# set font family
+# sns.set(font="Arial")
 # sns.set_style("whitegrid")
 sns.set_style("ticks")
 # sns.set_palette("pastel")
+sns.set_palette("Set2")
+# sns.set_palette("Blues")
 MARKER_BASE = ["o", "^", "X", "s", "p", "P", ">", "*", "h", "H", "D", "d", "v", "<", "8", "x", "+",
                "|", "_", "."]
 COLOR_BASE = ["r", "b", "g", "c", "m", "y", "k", "w"]
-HATCH_BASE = ["", "/", "\\", "|", "-", "+", "x", "o", "O", ".", "*"]
+HATCH_BASE = ["", "//", "XX", "++", "\\\\", "-", "||", "o", "O", ".", "*"]
 
 
 def plot_mean_delay_chart(df, xlabel, ylabel, title, output, show=True):
@@ -130,9 +134,10 @@ class P2(object):
     def __init__(self, input_path, out_path):
         self.input_path = input_path
         self.out_path = out_path
-        self.legend_map = {"popularity": "AC-POP", "random": "AC-RAND", "recommend": "AC-REC", "group": "AC-OPT"}
+        self.legend_map = {"LCE": "LCE", "popularity": "AC-POP", "random": "AC-RAND", "recommend": "AC-REC",
+                           "group": "AC-OPT"}
 
-    def plot_cache_hit_ratio_seq_line_chart(self, xlabel, ylabel, title, show=True, date="0610"):
+    def plot_cache_hit_ratio_seq_line_chart(self, xlabel, ylabel, title="", show=True, date="0610"):
         fig, ax = plt.subplots()
         ax.grid(linestyle="--")
         # read file from path and get label from file name
@@ -161,11 +166,11 @@ class P2(object):
         ax.set_title(title)
         ax.set_xlabel(xlabel, fontsize=14)
         ax.set_ylabel(ylabel, fontsize=14)
-        fig.savefig(self.out_path + "/cache_hit_ratio_seq.pdf")
+        fig.savefig(self.out_path + "/cache_hit_ratio_seq_{}.pdf".format(date))
         if show:
             plt.show()
 
-    def plot_avg_CHR_bar_group_chart(self, title, show=True):
+    def plot_data_to_avg_CHR_bar_group_chart(self, title="", show=True):
         """
         Plot average cache hit ratio bar chart, x-axis is date, y-axis is average cache hit ratio,
         each bar is a group of four bars, each bar is a different algorithm
@@ -209,6 +214,310 @@ class P2(object):
         if show:
             plt.show()
 
+    def plot_alpha_to_CHR_bar_chart_multi_file(self, title="", show=True):
+        sns.set_palette("Set2")
+        fig, ax = plt.subplots()
+        ax.grid(linestyle="--")
+        path = self.input_path + "/alpha"
+        file_list = os.listdir(path)
+        res = collections.defaultdict(dict)
+        for file in file_list:
+            method = os.path.basename(file).split(".")[0].split("_")[1]
+            alpha = eval(os.path.basename(file).split("_")[2].replace(".txt", ""))
+            # plot bar group chart, x-axis is alpha, y-axis is average cache hit ratio, each bar is a different algorithm
+            with open(os.path.join(path, file), "r") as f:
+                avg_chr = get_avg_cache_hit_ratio(f.read())
+                # print("method: {}, alpha: {}, avg_chr: {}".format(method, alpha, avg_chr))
+                res[alpha][method] = avg_chr
+
+        alpha_list = list(res.keys())
+        x = np.arange(len(res))
+        width = 0.15
+        i = 0
+        for method in res[list(res.keys())[0]]:
+            y = [res[alpha][method] for alpha in alpha_list]
+            ax.bar(x + width * i, y, width=width, label=method)
+            i += 1
+
+        ax.set_xticks(x + width * 1)
+        ax.set_xticklabels(alpha_list)
+        ax.set_xlabel("Alpha", fontsize=14)
+        ax.set_ylabel("Average cache hit ratio", fontsize=14)
+        ax.set_title(title)
+        ax.legend()
+        fig.savefig(self.out_path + "/alpha_to_avg_CHR_bar.pdf")
+        if show:
+            plt.show()
+
+    def plot_alpha_to_avg_CHR_bar_chart(self, title="", show=True):
+        fig, ax1 = plt.subplots()
+        ax1.grid(linestyle="--")
+        path = self.input_path + "/alpha"
+        csvfile = os.path.join(path, "v_alpha_10x.csv")
+        res = collections.defaultdict(dict)
+        df = pd.read_csv(csvfile, header=0, index_col=None)
+        # change methods name
+        df["methods"] = df["methods"].apply(lambda x: self.legend_map[x])
+        # draw bar chart, each bar is a different algorithm with different alpha, error bar only show the top
+        b = sns.barplot(x="alpha", y="CHR", hue="methods", data=df, ax=ax1, errwidth=1, capsize=0.1,
+                        errorbar=("ci", 90))
+        # Set a different hatch for each alpha
+        alpha_len = len(df["alpha"].unique())
+        for i, bar in enumerate(b.patches):
+            bar.set_hatch(HATCH_BASE[i // alpha_len])
+        ax1.legend(bbox_to_anchor=(0.5, 1.1), loc="upper center", borderaxespad=0.0, ncol=df["methods"].nunique())
+        ax1.set_xlabel("Alpha", fontsize=14, labelpad=0)
+        ax1.set_ylabel("Average cache hit ratio", fontsize=14)
+        ax1.set_title(title)
+        fig.savefig(self.out_path + "/alpha_to_avg_CHR_bar.pdf")
+        if show:
+            plt.show()
+
+    def plot_alpha_to_free_space_bar_chart(self, title="", show=True):
+        fig, ax1 = plt.subplots()
+        ax1.grid(linestyle="--")
+        path = self.input_path + "/alpha"
+        csvfile = os.path.join(path, "v_alpha_10x.csv")
+        res = collections.defaultdict(dict)
+        df = pd.read_csv(csvfile, header=0, index_col=None)
+        # change methods name
+        df["methods"] = df["methods"].apply(lambda x: self.legend_map[x])
+        # use seaborn to draw bar chart, each bar is a different algorithm with different alpha,
+        b = sns.barplot(x="alpha", y="free_space", hue="methods", data=df, ax=ax1, errwidth=1, capsize=0.1,
+                        errorbar=("ci", 90))
+        # Set a different hatch for each alpha
+        alpha_len = len(df["alpha"].unique())
+        for i, bar in enumerate(b.patches):
+            bar.set_hatch(HATCH_BASE[i // alpha_len])
+        ax1.legend(bbox_to_anchor=(0.5, 1.1), loc="upper center", borderaxespad=0.0, ncol=df["methods"].nunique())
+        ax1.set_xlabel("Alpha", fontsize=14)
+        ax1.set_ylabel("Space remaining ratio", fontsize=14)
+        ax1.set_title(title)
+        fig.savefig(self.out_path + "/alpha_to_avg_space_bar.pdf")
+        if show:
+            plt.show()
+
+    def plot_alpha_mix_bar_chart(self, title="", show=True):
+        """
+        plot alpha to average cache hit ratio and average space remaining ratio bar chart in one figure
+        """
+        fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True)
+        ax1.grid(linestyle="--")
+        ax2.grid(linestyle="--")
+        path = self.input_path + "/alpha"
+        csvfile = os.path.join(path, "v_alpha_main.csv")
+        res = collections.defaultdict(dict)
+        df = pd.read_csv(csvfile, header=0, index_col=None)
+        # change methods name
+        df["methods"] = df["methods"].apply(lambda x: self.legend_map[x])
+        df["used_space"] = 1 - df["free_space"]
+        # use seaborn to draw bar chart, each bar is a different algorithm with different alpha,
+        # Use the same single x-axis, flip the second y-axis top to bottom
+        b1 = sns.barplot(x="alpha", y="CHR", hue="methods", data=df, ax=ax1, errwidth=1, capsize=0.1,
+                         errorbar=("ci", 90))
+        b2 = sns.barplot(x="alpha", y="used_space", hue="methods", data=df, ax=ax2, errwidth=1, capsize=0.1,
+                         errorbar=("ci", 90))
+        # Set a different hatch for each alpha
+        alpha_len = len(df["alpha"].unique())
+        for i, bar in enumerate(b1.patches):
+            bar.set_hatch(HATCH_BASE[i // alpha_len])
+        for i, bar in enumerate(b2.patches):
+            bar.set_hatch(HATCH_BASE[i // alpha_len])
+        # x-axis label and x-axis tick label should be in the middle of two subplots
+        ax2.set_xlabel("Alpha", fontsize=14, labelpad=5)
+        ax2.tick_params(axis="x", pad=1)
+        ax1.set_xlabel("")
+        ax2.xaxis.set_ticks_position("top")
+        ax2.invert_yaxis()
+        ax1.legend(bbox_to_anchor=(0.5, 1.2), loc="upper center", borderaxespad=0.0, ncol=df["methods"].nunique())
+        # ax2.legend(bbox_to_anchor=(0.5, -0.05), loc="upper center", borderaxespad=0.0, ncol=df["methods"].nunique())
+        ax2.legend().set_visible(False)
+        ax1.set_ylabel("Average CHR", fontsize=14)
+        ax2.set_ylabel("Space occupied", fontsize=14)
+        ax1.set_title(title)
+        fig.savefig(self.out_path + "/alpha_mix_bar.pdf")
+        if show:
+            plt.show()
+
+    def plot_t0_to_avg_CHR_bar_chart(self, title="", show=True):
+        fig, ax1 = plt.subplots()
+        ax1.grid(linestyle="--")
+        path = self.input_path + "/t0"
+        csvfile = os.path.join(path, "v_t0_10x.csv")
+        res = collections.defaultdict(dict)
+        df = pd.read_csv(csvfile, header=0, index_col=None)
+        # change methods name
+        df["methods"] = df["methods"].apply(lambda x: self.legend_map[x])
+        # use seaborn to draw line chart, smooth line
+        b = sns.barplot(x="alpha", y="CHR", hue="methods", data=df, ax=ax1, errwidth=1, capsize=0.1,
+                        errorbar=("ci", 90))
+        t0_len = len(df["alpha"].unique())
+        for i, bar in enumerate(b.patches):
+            bar.set_hatch(HATCH_BASE[i // t0_len])
+        # put legend outside the plot, tile on top of the graph
+        # plt.legend(bbox_to_anchor=(0.5, 1.1), loc="upper center", borderaxespad=0.0, ncol=df["methods"].nunique())
+        ax1.set_xlabel("T0", fontsize=14)
+        ax1.set_ylabel("Average cache hit ratio", fontsize=14)
+        ax1.set_title(title)
+        fig.savefig(self.out_path + "/t0_to_avg_CHR_bar.pdf")
+        if show:
+            plt.show()
+
+    def plot_t0_to_free_space_bar_chart(self, title="", show=True):
+        fig, ax1 = plt.subplots()
+        ax1.grid(linestyle="--")
+        path = self.input_path + "/t0"
+        csvfile = os.path.join(path, "v_t0_10x.csv")
+        res = collections.defaultdict(dict)
+        df = pd.read_csv(csvfile, header=0, index_col=None)
+        # change methods name
+        df["methods"] = df["methods"].apply(lambda x: self.legend_map[x])
+        # use seaborn to draw line chart, smooth line
+        b = sns.barplot(x="alpha", y="free_space", hue="methods", data=df, ax=ax1, errwidth=1, capsize=0.1,
+                        errorbar=("ci", 90))
+        t0_len = len(df["alpha"].unique())
+        for i, bar in enumerate(b.patches):
+            bar.set_hatch(HATCH_BASE[i // t0_len])
+        # put legend outside the plot, tile on top of the graph
+        plt.legend(bbox_to_anchor=(0.5, 1.1), loc="upper center", borderaxespad=0.0, ncol=df["methods"].nunique())
+        ax1.set_xlabel("T0", fontsize=14)
+        ax1.set_ylabel("Space remaining ratio", fontsize=14)
+        ax1.set_title(title)
+        fig.savefig(self.out_path + "/t0_to_avg_space_bar.pdf")
+        if show:
+            plt.show()
+
+    def plot_t0_mix_bar_chart(self, title="", show=True):
+        """
+        plot t0 to average cache hit ratio and average space remaining ratio bar chart in one figure
+        """
+        fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True)
+        ax1.grid(linestyle="--")
+        ax2.grid(linestyle="--")
+        path = self.input_path + "/t0"
+        csvfile = os.path.join(path, "v_t0_10x.csv")
+        res = collections.defaultdict(dict)
+        df = pd.read_csv(csvfile, header=0, index_col=None)
+        # change methods name
+        df["methods"] = df["methods"].apply(lambda x: self.legend_map[x])
+        df["used_space"] = 1 - df["free_space"]
+        # use seaborn to draw bar chart, each bar is a different algorithm with different alpha,
+        # Use the same single x-axis, flip the second y-axis top to bottom
+        b1 = sns.barplot(x="alpha", y="CHR", hue="methods", data=df, ax=ax1, errwidth=1, capsize=0.1,
+                         errorbar=("ci", 90))
+        b2 = sns.barplot(x="alpha", y="used_space", hue="methods", data=df, ax=ax2, errwidth=1, capsize=0.1,
+                         errorbar=("ci", 90))
+        alpha_len = len(df["alpha"].unique())
+        for i, bar in enumerate(b1.patches):
+            bar.set_hatch(HATCH_BASE[i // alpha_len])
+        for i, bar in enumerate(b2.patches):
+            bar.set_hatch(HATCH_BASE[i // alpha_len])
+        # x-axis label and x-axis tick label should be in the middle of two subplots
+        ax2.set_xlabel("T0", fontsize=14, labelpad=5)
+        ax2.tick_params(axis="x", pad=1)
+        ax1.set_xlabel("")
+        ax2.xaxis.set_ticks_position("top")
+        ax2.invert_yaxis()
+        ax1.legend(bbox_to_anchor=(0.5, 1.2), loc="upper center", borderaxespad=0.0, ncol=df["methods"].nunique())
+        # ax2.legend(bbox_to_anchor=(0.5, -0.05), loc="upper center", borderaxespad=0.0, ncol=df["methods"].nunique())
+        ax2.legend().set_visible(False)
+        ax1.set_ylabel("Average CHR", fontsize=14)
+        ax2.set_ylabel("Space occupied", fontsize=14)
+        ax1.set_title(title)
+        fig.savefig(self.out_path + "/t0_mix_bar.pdf")
+        if show:
+            plt.show()
+
+    def plot_k_to_avg_CHR_bar_chart(self, title="", show=True):
+        fig, ax1 = plt.subplots()
+        ax1.grid(linestyle="--")
+        path = self.input_path + "/k"
+        csvfile = os.path.join(path, "v_k_10x.csv")
+        res = collections.defaultdict(dict)
+        df = pd.read_csv(csvfile, header=0, index_col=None)
+        # change methods name
+        df["methods"] = df["methods"].apply(lambda x: self.legend_map[x])
+        # use seaborn to draw line chart, smooth line
+        b = sns.barplot(x="alpha", y="CHR", hue="methods", data=df, ax=ax1, errwidth=1, capsize=0.1,
+                        errorbar=("ci", 90))
+        alpha_len = len(df["alpha"].unique())
+        for i, bar in enumerate(b.patches):
+            bar.set_hatch(HATCH_BASE[i // alpha_len])
+        # put legend outside the plot, tile on top of the graph
+        plt.legend(bbox_to_anchor=(0.5, 1.1), loc="upper center", borderaxespad=0.0, ncol=df["methods"].nunique())
+        ax1.set_xlabel("Recommended candidate set size", fontsize=14)
+        ax1.set_ylabel("Average cache hit ratio", fontsize=14)
+        ax1.set_title(title)
+        fig.savefig(self.out_path + "/k_to_avg_CHR_bar.pdf")
+        if show:
+            plt.show()
+
+    def plot_k_to_free_space_bar_chart(self, title="", show=True):
+        fig, ax1 = plt.subplots()
+        ax1.grid(linestyle="--")
+        path = self.input_path + "/k"
+        csvfile = os.path.join(path, "v_k_10x.csv")
+        res = collections.defaultdict(dict)
+        df = pd.read_csv(csvfile, header=0, index_col=None)
+        # change methods name
+        df["methods"] = df["methods"].apply(lambda x: self.legend_map[x])
+        # use seaborn to draw line chart, smooth line
+        b = sns.barplot(x="alpha", y="free_space", hue="methods", data=df, ax=ax1, errwidth=1, capsize=0.1,
+                        errorbar=("ci", 90))
+        alpha_len = len(df["alpha"].unique())
+        for i, bar in enumerate(b.patches):
+            bar.set_hatch(HATCH_BASE[i // alpha_len])
+        # put legend outside the plot, tile on top of the graph
+        plt.legend(bbox_to_anchor=(0.5, 1.1), loc="upper center", borderaxespad=0.0, ncol=df["methods"].nunique())
+        ax1.set_xlabel("Recommended candidate set size", fontsize=14)
+        ax1.set_ylabel("Space remaining ratio", fontsize=14)
+        ax1.set_title(title)
+        fig.savefig(self.out_path + "/k_to_avg_space_bar.pdf")
+        if show:
+            plt.show()
+
+    def plot_k_mix_bar_chart(self, title="", show=True):
+        """
+        plot k to average cache hit ratio and average space remaining ratio bar chart in one figure
+        """
+        fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True)
+        ax1.grid(linestyle="--")
+        ax2.grid(linestyle="--")
+        path = self.input_path + "/k"
+        csvfile = os.path.join(path, "v_k_10x.csv")
+        res = collections.defaultdict(dict)
+        df = pd.read_csv(csvfile, header=0, index_col=None)
+        # change methods name
+        df["methods"] = df["methods"].apply(lambda x: self.legend_map[x])
+        df["used_space"] = 1 - df["free_space"]
+        # use seaborn to draw bar chart, each bar is a different algorithm with different alpha,
+        # Use the same single x-axis, flip the second y-axis top to bottom
+        bar1 = sns.barplot(x="alpha", y="CHR", hue="methods", data=df, ax=ax1, errwidth=1, capsize=0.1,
+                           errorbar=("ci", 90))
+        bar2 = sns.barplot(x="alpha", y="used_space", hue="methods", data=df, ax=ax2, errwidth=1, capsize=0.1,
+                           errorbar=("ci", 90))
+        # Set a different hatch for each alpha
+        alpha_len = len(df["alpha"].unique())
+        for i, bar in enumerate(bar1.patches):
+            bar.set_hatch(HATCH_BASE[i // alpha_len])
+        for i, bar in enumerate(bar2.patches):
+            bar.set_hatch(HATCH_BASE[i // alpha_len])
+        # x-axis label and x-axis tick label should be in the middle of two subplots
+        ax2.set_xlabel("Recommended candidate set size", fontsize=14, labelpad=5)
+        ax2.tick_params(axis="x", pad=1)
+        ax1.set_xlabel("")
+        ax2.xaxis.set_ticks_position("top")
+        ax2.invert_yaxis()
+        ax1.legend(bbox_to_anchor=(0.5, 1.2), loc="upper center", borderaxespad=0.0, ncol=df["methods"].nunique())
+        # ax2.legend(bbox_to_anchor=(0.5, -0.05), loc="upper center", borderaxespad=0.0, ncol=df["methods"].nunique())
+        ax2.legend().set_visible(False)
+        ax1.set_ylabel("Average CHR", fontsize=14)
+        ax2.set_ylabel("Space occupied", fontsize=14)
+        ax1.set_title(title)
+        fig.savefig(self.out_path + "/k_mix_bar.pdf")
+        if show:
+            plt.show()
+
 
 def run(input_file, output_path):
     # name = "mean_delay.pdf"
@@ -234,8 +543,17 @@ def run(input_file, output_path):
     # ---------------------------paper 2-------------------------------
     # plot_cache_hit_ratio_seq_line_chart
     p2 = P2(input_file, output_path)
-    p2.plot_cache_hit_ratio_seq_line_chart("Time/s", "Average cache hit ratio", "", date="0611")
-    # p2.plot_avg_CHR_bar_group_chart("")
+    p2.plot_cache_hit_ratio_seq_line_chart("Time/s", "Average cache hit ratio", "", date="0616")
+    # p2.plot_data_to_avg_CHR_bar_group_chart()
+    # p2.plot_alpha_to_avg_CHR_bar_chart()
+    # p2.plot_alpha_to_free_space_bar_chart()
+    # p2.plot_alpha_mix_bar_chart()
+    # p2.plot_t0_to_avg_CHR_bar_chart()
+    # p2.plot_t0_to_free_space_bar_chart()
+    # p2.plot_t0_mix_bar_chart()
+    # p2.plot_k_to_avg_CHR_bar_chart()
+    # p2.plot_k_to_free_space_bar_chart()
+    # p2.plot_k_mix_bar_chart()
 
 
 def main():
