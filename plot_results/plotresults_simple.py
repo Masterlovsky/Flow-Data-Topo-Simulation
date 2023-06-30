@@ -1,4 +1,5 @@
 import collections
+import math
 import os
 import argparse
 import logging
@@ -519,6 +520,72 @@ class P2(object):
             plt.show()
 
 
+class P4(object):
+    """
+    draw pictures for paper 4
+    """
+
+    def __init__(self, input_path, out_path):
+        self.input_path = input_path
+        self.out_path = out_path
+
+    def read_excel(self, sheet_name, dtype=None):
+        """
+        read from excel to pandas dataframe
+        """
+        # read excel, skip empty rows
+        df = pd.read_excel(self.input_path, sheet_name=sheet_name, dtype=dtype)
+        df.dropna(axis=0, how="all", inplace=True)
+        return df
+
+    def draw_speed_box_chart(self, show=True):
+        """
+        draw speed box chart
+        """
+        CATEGORY_MAP = {"r10w": "insert-10w", "q10w": "query-10w", "d10w": "delete-10w"}
+        df_speed = self.read_excel("speed", dtype={"time": int, "set_num": int})
+
+        # get filter category
+        filter_category = df_speed["filter"].unique()
+        for f in filter_category:
+            fig, ax = plt.subplots()
+            ax.grid(linestyle="--")
+            df = df_speed[df_speed["filter"] == f].copy()
+            df["category"] = df["category"].apply(lambda x: CATEGORY_MAP[x])
+            # df["set_num"] = df["set_num"].apply(lambda x: math.log(x, 2))
+            sns.boxplot(x="set_num", y="time", data=df, hue="category", ax=ax)
+            ax.set_xlabel("Set number", fontsize=14)
+            ax.set_ylabel("Job complete time(us)", fontsize=14)
+            # y-axis use scientific notation to show
+            ax.ticklabel_format(style="sci", axis="y", scilimits=(-2, 2))
+            fig.savefig(self.out_path + "/speed_box_{}.pdf".format(f))
+        if show:
+            plt.show()
+
+    def draw_space_line_chart(self, show=True):
+        """
+        draw space line chart
+        """
+        sns.set_palette("muted")
+        TYPE_MAP = {"emcf": "EMCF", "cf": "CF-Group"}
+        fig, ax = plt.subplots()
+        ax.grid(linestyle="--")
+        df = self.read_excel("summary", dtype={"set_num": int, "mem_used": np.int64})
+        df = df[df["capacity"] == 100000000].copy()
+        df["type"] = df["type"].apply(lambda x: TYPE_MAP[x])
+        sns.lineplot(x="set_num", y="mem_used", hue="type", markers=True, data=df,
+                     ax=ax, markersize=10, linewidth=2, dashes=False, style="type")
+        # set line style
+        ax.lines[0].set_linestyle("-")
+        ax.lines[1].set_linestyle("--")
+        ax.set_xlabel("Set number", fontsize=14)
+        ax.set_ylabel("Space occupied", fontsize=14)
+        # legend use scientific notation to show
+        fig.savefig(self.out_path + "/space_line.pdf")
+        if show:
+            plt.show()
+
+
 def run(input_file, output_path):
     # name = "mean_delay.pdf"
     logger.info("Reading results from %s", input_file)
@@ -542,8 +609,8 @@ def run(input_file, output_path):
 
     # ---------------------------paper 2-------------------------------
     # plot_cache_hit_ratio_seq_line_chart
-    p2 = P2(input_file, output_path)
-    p2.plot_cache_hit_ratio_seq_line_chart("Time/s", "Average cache hit ratio", "", date="0616")
+    # p2 = P2(input_file, output_path)
+    # p2.plot_cache_hit_ratio_seq_line_chart("Time/s", "Average cache hit ratio", "", date="0616")
     # p2.plot_data_to_avg_CHR_bar_group_chart()
     # p2.plot_alpha_to_avg_CHR_bar_chart()
     # p2.plot_alpha_to_free_space_bar_chart()
@@ -554,6 +621,11 @@ def run(input_file, output_path):
     # p2.plot_k_to_avg_CHR_bar_chart()
     # p2.plot_k_to_free_space_bar_chart()
     # p2.plot_k_mix_bar_chart()
+
+    # ---------------------------paper 4-------------------------------
+    p4 = P4(input_file, output_path)
+    # p4.draw_speed_box_chart()
+    p4.draw_space_line_chart()
 
 
 def main():
