@@ -571,7 +571,7 @@ class P4(object):
         fig, ax = plt.subplots()
         ax.grid(linestyle="--")
         df = self.read_excel("summary", dtype={"set_num": int, "mem_used": np.int64})
-        df = df[df["capacity"] == 100000000].copy()
+        df = df[df["capacity"] == 1000000].copy()
         df["type"] = df["type"].apply(lambda x: TYPE_MAP[x])
         sns.lineplot(x="set_num", y="mem_used", hue="type", markers=True, data=df,
                      ax=ax, markersize=10, linewidth=2, dashes=False, style="type")
@@ -580,7 +580,10 @@ class P4(object):
         ax.lines[1].set_linestyle("--")
         ax.set_xlabel("Set number", fontsize=14)
         ax.set_ylabel("Space occupied", fontsize=14)
-        # legend use scientific notation to show
+        # get rid of legend title
+        handles, labels = ax.get_legend_handles_labels()
+        ax.legend(handles=handles[:], labels=labels[:])
+        # save figure
         fig.savefig(self.out_path + "/space_line.pdf")
         if show:
             plt.show()
