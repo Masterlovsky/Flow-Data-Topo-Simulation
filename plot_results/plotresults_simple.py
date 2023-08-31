@@ -298,7 +298,7 @@ class P2(object):
         if show:
             plt.show()
 
-    def plot_alpha_mix_bar_chart(self, title="", show=True):
+    def plot_alpha_mix_bar_chart(self, title="", show=True, in_f="v_alpha_main.csv", out_f="alpha_mix_bar.pdf"):
         """
         plot alpha to average cache hit ratio and average space remaining ratio bar chart in one figure
         """
@@ -306,7 +306,7 @@ class P2(object):
         ax1.grid(linestyle="--")
         ax2.grid(linestyle="--")
         path = self.input_path + "/alpha"
-        csvfile = os.path.join(path, "v_alpha_main.csv")
+        csvfile = os.path.join(path, in_f)
         res = collections.defaultdict(dict)
         df = pd.read_csv(csvfile, header=0, index_col=None)
         # change methods name
@@ -325,7 +325,7 @@ class P2(object):
         for i, bar in enumerate(b2.patches):
             bar.set_hatch(HATCH_BASE[i // alpha_len])
         # x-axis label and x-axis tick label should be in the middle of two subplots
-        ax2.set_xlabel("Alpha", fontsize=14, labelpad=5)
+        ax2.set_xlabel("Alpha", fontsize=16, labelpad=5)
         ax2.tick_params(axis="x", pad=1)
         ax1.set_xlabel("")
         ax2.xaxis.set_ticks_position("top")
@@ -333,10 +333,10 @@ class P2(object):
         ax1.legend(bbox_to_anchor=(0.5, 1.2), loc="upper center", borderaxespad=0.0, ncol=df["methods"].nunique())
         # ax2.legend(bbox_to_anchor=(0.5, -0.05), loc="upper center", borderaxespad=0.0, ncol=df["methods"].nunique())
         ax2.legend().set_visible(False)
-        ax1.set_ylabel("Average CHR", fontsize=14)
-        ax2.set_ylabel("Space occupied", fontsize=14)
+        ax1.set_ylabel("Average CHR", fontsize=16)
+        ax2.set_ylabel("Space occupied", fontsize=16)
         ax1.set_title(title)
-        fig.savefig(self.out_path + "/alpha_mix_bar.pdf")
+        fig.savefig(os.path.join(self.out_path, out_f))
         if show:
             plt.show()
 
@@ -388,7 +388,7 @@ class P2(object):
         if show:
             plt.show()
 
-    def plot_t0_mix_bar_chart(self, title="", show=True):
+    def plot_t0_mix_bar_chart(self, title="", show=True, in_f="v_t0_main.csv", out_f="t0_mix_bar.pdf"):
         """
         plot t0 to average cache hit ratio and average space remaining ratio bar chart in one figure
         """
@@ -396,7 +396,7 @@ class P2(object):
         ax1.grid(linestyle="--")
         ax2.grid(linestyle="--")
         path = self.input_path + "/t0"
-        csvfile = os.path.join(path, "v_t0_10x.csv")
+        csvfile = os.path.join(path, in_f)
         res = collections.defaultdict(dict)
         df = pd.read_csv(csvfile, header=0, index_col=None)
         # change methods name
@@ -414,7 +414,7 @@ class P2(object):
         for i, bar in enumerate(b2.patches):
             bar.set_hatch(HATCH_BASE[i // alpha_len])
         # x-axis label and x-axis tick label should be in the middle of two subplots
-        ax2.set_xlabel("T0", fontsize=14, labelpad=5)
+        ax2.set_xlabel("Default time-to-live ${t0}$", fontsize=16, labelpad=5)
         ax2.tick_params(axis="x", pad=1)
         ax1.set_xlabel("")
         ax2.xaxis.set_ticks_position("top")
@@ -422,10 +422,10 @@ class P2(object):
         ax1.legend(bbox_to_anchor=(0.5, 1.2), loc="upper center", borderaxespad=0.0, ncol=df["methods"].nunique())
         # ax2.legend(bbox_to_anchor=(0.5, -0.05), loc="upper center", borderaxespad=0.0, ncol=df["methods"].nunique())
         ax2.legend().set_visible(False)
-        ax1.set_ylabel("Average CHR", fontsize=14)
-        ax2.set_ylabel("Space occupied", fontsize=14)
+        ax1.set_ylabel("Average CHR", fontsize=16)
+        ax2.set_ylabel("Space occupied", fontsize=16)
         ax1.set_title(title)
-        fig.savefig(self.out_path + "/t0_mix_bar.pdf")
+        fig.savefig(os.path.join(self.out_path, out_f))
         if show:
             plt.show()
 
@@ -477,7 +477,7 @@ class P2(object):
         if show:
             plt.show()
 
-    def plot_k_mix_bar_chart(self, title="", show=True):
+    def plot_k_mix_bar_chart(self, title="", show=True, in_f="v_k_main.csv", out_f="k_mix_bar.pdf"):
         """
         plot k to average cache hit ratio and average space remaining ratio bar chart in one figure
         """
@@ -485,7 +485,7 @@ class P2(object):
         ax1.grid(linestyle="--")
         ax2.grid(linestyle="--")
         path = self.input_path + "/k"
-        csvfile = os.path.join(path, "v_k_10x.csv")
+        csvfile = os.path.join(path, in_f)
         res = collections.defaultdict(dict)
         df = pd.read_csv(csvfile, header=0, index_col=None)
         # change methods name
@@ -504,7 +504,7 @@ class P2(object):
         for i, bar in enumerate(bar2.patches):
             bar.set_hatch(HATCH_BASE[i // alpha_len])
         # x-axis label and x-axis tick label should be in the middle of two subplots
-        ax2.set_xlabel("Recommended candidate set size", fontsize=14, labelpad=5)
+        ax2.set_xlabel("Recommended candidate set size ${k}$", fontsize=16, labelpad=5)
         ax2.tick_params(axis="x", pad=1)
         ax1.set_xlabel("")
         ax2.xaxis.set_ticks_position("top")
@@ -512,10 +512,10 @@ class P2(object):
         ax1.legend(bbox_to_anchor=(0.5, 1.2), loc="upper center", borderaxespad=0.0, ncol=df["methods"].nunique())
         # ax2.legend(bbox_to_anchor=(0.5, -0.05), loc="upper center", borderaxespad=0.0, ncol=df["methods"].nunique())
         ax2.legend().set_visible(False)
-        ax1.set_ylabel("Average CHR", fontsize=14)
-        ax2.set_ylabel("Space occupied", fontsize=14)
+        ax1.set_ylabel("Average CHR", fontsize=16)
+        ax2.set_ylabel("Space occupied", fontsize=16)
         ax1.set_title(title)
-        fig.savefig(self.out_path + "/k_mix_bar.pdf")
+        fig.savefig(os.path.join(self.out_path, out_f))
         if show:
             plt.show()
 
@@ -562,29 +562,32 @@ class P4(object):
         if show:
             plt.show()
 
-    def draw_space_line_chart(self, show=True):
+    def draw_space_line_chart(self, xtype="set_num", show=True):
         """
         draw space line chart
         """
         sns.set_palette("muted")
-        TYPE_MAP = {"emcf": "EMCF", "cf": "CF-Group"}
+        TYPE_MAP = {"emcf": "EMCF", "cf": "CF-Group", "hashmap": "Hashmap"}
         fig, ax = plt.subplots()
         ax.grid(linestyle="--")
         df = self.read_excel("summary", dtype={"set_num": int, "mem_used": np.int64})
-        df = df[df["capacity"] == 1000000].copy()
+        if xtype == "set_num":
+            df = df[df["capacity"] == 1000000].copy()
+        elif xtype == "capacity":
+            df = df[df["set_num"] == 16].copy()
         df["type"] = df["type"].apply(lambda x: TYPE_MAP[x])
-        sns.lineplot(x="set_num", y="mem_used", hue="type", markers=True, data=df,
+        sns.lineplot(x=xtype, y="mem_used", hue="type", markers=True, data=df,
                      ax=ax, markersize=10, linewidth=2, dashes=False, style="type")
         # set line style
         ax.lines[0].set_linestyle("-")
         ax.lines[1].set_linestyle("--")
-        ax.set_xlabel("Set number", fontsize=14)
+        ax.set_xlabel(xtype, fontsize=14)
         ax.set_ylabel("Space occupied", fontsize=14)
         # get rid of legend title
         handles, labels = ax.get_legend_handles_labels()
         ax.legend(handles=handles[:], labels=labels[:])
         # save figure
-        fig.savefig(self.out_path + "/space_line.pdf")
+        fig.savefig(self.out_path + "/space_with_{}.pdf".format(xtype))
         if show:
             plt.show()
 
@@ -617,18 +620,19 @@ def run(input_file, output_path):
     # p2.plot_data_to_avg_CHR_bar_group_chart()
     # p2.plot_alpha_to_avg_CHR_bar_chart()
     # p2.plot_alpha_to_free_space_bar_chart()
-    # p2.plot_alpha_mix_bar_chart()
+    # p2.plot_alpha_mix_bar_chart(in_f="v_alpha_10x_v1.2.csv", out_f="alpha_mix_bar_v1.2.pdf")
     # p2.plot_t0_to_avg_CHR_bar_chart()
     # p2.plot_t0_to_free_space_bar_chart()
-    # p2.plot_t0_mix_bar_chart()
+    # p2.plot_t0_mix_bar_chart(in_f="v_t0_10x_v1.2.csv", out_f="t0_mix_bar_v1.2.pdf")
     # p2.plot_k_to_avg_CHR_bar_chart()
     # p2.plot_k_to_free_space_bar_chart()
-    # p2.plot_k_mix_bar_chart()
+    # p2.plot_k_mix_bar_chart(in_f="v_k_10x_v1.2.csv", out_f="k_mix_bar_v1.2.pdf")
 
     # ---------------------------paper 4-------------------------------
     p4 = P4(input_file, output_path)
     # p4.draw_speed_box_chart()
-    p4.draw_space_line_chart()
+    # p4.draw_space_line_chart("set_num")
+    p4.draw_space_line_chart("capacity")
 
 
 def main():
