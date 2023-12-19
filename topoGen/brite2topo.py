@@ -39,11 +39,11 @@ def getNodesAndEdgesNumber(file_name: str) -> tuple:
 def dump_axis_from_brite(brite_file: str, node_type_file: str, out_file: str, node_n: int, cluster_n: int):
     """
     Get axis information from brite file
-    :param cluster_n: controller number in each AS
     :param brite_file: input brite file name
     :param node_type_file: input layout file name
-    :param out_file: output file name (layout file)
+    :param out_file: output file name (layout file) -> ["NodeID", "x", "y", "as_id", "ctrl_id"]
     :param node_n: total node number
+    :param cluster_n: controller number in each AS
     """
     # create and clear output file
     with open(out_file, 'w') as f:
@@ -275,16 +275,16 @@ def check_layout_valid(layout_file: str, node_type_file: str, k: int):
 if __name__ == '__main__':
     RECV_RAT = 0.8  # The ratio of receiver nodes compared to source nodes
     SW_RAT = 0.8  # The ratio of switch candidates in all routers
-    END_POINT_NUM = 7500  # The number of end points(source + receiver)
-    CONTROLLER_NUM = 50  # The number of controllers in each AS
-    path = "topology/seanrs_50x200/"  # brite file path
+    END_POINT_NUM = 30  # The number of end points(source + receiver)
+    CONTROLLER_NUM = 3  # The number of controllers in each AS
+    path = "topology/DINNRS_topo/"  # brite file path
     # path = ""
-    brite_file = path + "seanrs50x200.brite"
-    extend_brite_file = path + "seanrs50x200_extend.brite"
+    brite_file = path + "dinnrs.brite"
+    extend_brite_file = path + "dinnrs_extend.brite"
     extent_brite_topo(brite_file, extend_brite_file, END_POINT_NUM, SW_RAT)
-    topo_file = path + "topo50x200.txt"
-    layout_file = path + "layout50x200.txt"
-    node_type_file = path + "node_type50x200.txt"
+    topo_file = path + "topo_dinnrs.txt"
+    layout_file = path + "layout_dinnrs.txt"
+    node_type_file = path + "node_type_dinnrs.txt"
     node_num, edges_num = getNodesAndEdgesNumber(extend_brite_file)
     dump_topology(extend_brite_file, topo_file, node_num, edges_num)  # Generate topology file
     dump_node_type(extend_brite_file, node_type_file, RECV_RAT)  # Generate node type file

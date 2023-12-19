@@ -22,7 +22,7 @@ sns.set_palette("Set2")
 # sns.set_palette("Blues")
 MARKER_BASE = ["o", "^", "X", "s", "p", "P", ">", "*", "h", "H", "D", "d", "v", "<", "8", "x", "+",
                "|", "_", "."]
-COLOR_BASE = ["r", "b", "g", "c", "m", "y", "k", "w"]
+COLOR_BASE = ["r", "b", "g", "c", "m", "y", "k", "#FFA500", "#FFC0CB", "#FFD700", "#FF00FF", "#FF1493", "#FF4500", ]
 HATCH_BASE = ["", "//", "XX", "++", "\\\\", "-", "||", "o", "O", ".", "*"]
 
 
@@ -125,6 +125,168 @@ def get_avg_cache_hit_ratio(doc):
         return avg_chr
     else:
         print("No average Cache hit ratio found in doc")
+
+
+class P1(object):
+    def __init__(self, input_path, out_path):
+        self.input_path = input_path
+        self.out_path = out_path
+        self.df = pd.read_csv(self.input_path, header=0, index_col=None)
+        # Remove leading and trailing spaces from each field in the header.
+        self.df.columns = self.df.columns.str.strip()
+
+    def plot_link_load_rate_line_chart(self, title=""):
+        REQ_PKT_SIZE = 150
+        fig, ax = plt.subplots()
+        # set resolution to 300 dpi
+        fig.set_dpi(300)
+        ax.grid(linestyle="--")
+        # use sci format, fonts and size
+        ax.ticklabel_format(style="sci", scilimits=(-2, 2))
+        ax.tick_params(labelsize=12)
+        # sieve out the data from dataframe, alpha=0.85, cache=10.0
+        df = self.df[(self.df["alpha"] == 0.85) & (self.df["cache"] == 0.1)]
+        x = df["rate"].sort_values(ascending=True).unique()
+        i = 0
+        for wl_name in ("LEVEL_PROBABILITY", "STATIONARY"):
+            for strategy in ("SEANRS", "MDHT"):
+                line_style = "--" if strategy == "SEANRS" else "-"
+                if wl_name == "LEVEL_PROBABILITY":
+                    temp = df[(df["workload_name"] == wl_name) & (df["strategy"] == strategy) & (df["lp"] == 0.7)]
+                    y = (temp["intra_link_load"] + temp["inter_link_load"]) * REQ_PKT_SIZE
+                    ax.plot(x, y,
+                            label="{}_{}={}".format("DINNRS" if strategy == "SEANRS" else "MDHT",
+                                                    "LP" if wl_name == "LEVEL_PROBABILITY" else "ST",
+                                                    0.7),
+                            color=COLOR_BASE[i], marker=MARKER_BASE[i], markersize=8, linestyle=line_style)
+                    i += 1
+                else:
+                    temp = df[(df["workload_name"] == wl_name) & (df["strategy"] == strategy)]
+                    y = (temp["intra_link_load"] + temp["inter_link_load"]) * REQ_PKT_SIZE
+                    ax.plot(x, y,
+                            label="{}_{}".format("DINNRS" if strategy == "SEANRS" else "MDHT",
+                                                 "LP" if wl_name == "LEVEL_PROBABILITY" else "ST"),
+                            color=COLOR_BASE[i], marker=MARKER_BASE[i], markersize=8, linestyle=line_style)
+                    i += 1
+        # y use scientific notation
+        ax.set_xlabel("Request rate", fontsize=16)
+        ax.set_ylabel("Average link load", fontsize=16)
+        ax.set_title(title, fontsize=16)
+        # legend can't obstruct the image
+        ax.legend()
+        fig.savefig(self.out_path + "/link_load_rate_new.pdf")
+        plt.show()
+
+    def plot_intra_ratio_line_chart(self, title=""):
+        fig, ax = plt.subplots()
+        # set resolution to 300 dpi
+        fig.set_dpi(300)
+        ax.grid(linestyle="--")
+        # use sci format, fonts and size
+        ax.ticklabel_format(style="sci", scilimits=(-2, 2))
+        ax.tick_params(labelsize=12)
+        # sieve out the data from dataframe, alpha=0.85, cache=10.0
+        df = self.df[(self.df["alpha"] == 0.85) & (self.df["cache"] == 0.1)]
+        x = df["rate"].sort_values(ascending=True).unique()
+        i = 0
+        for wl_name in ("LEVEL_PROBABILITY", "STATIONARY"):
+            for strategy in ("SEANRS", "MDHT"):
+                line_style = "--" if strategy == "SEANRS" else "-"
+                if wl_name == "LEVEL_PROBABILITY":
+                    temp = df[(df["workload_name"] == wl_name) & (df["strategy"] == strategy) & (df["lp"] == 0.7)]
+                    y = temp["intra_link_load"] / (temp["intra_link_load"] + temp["inter_link_load"])
+                    ax.plot(x, y,
+                            label="{}_{}={}".format("DINNRS" if strategy == "SEANRS" else "MDHT",
+                                                    "LP" if wl_name == "LEVEL_PROBABILITY" else "ST",
+                                                    0.7),
+                            color=COLOR_BASE[i], marker=MARKER_BASE[i], markersize=8, linestyle=line_style)
+                    i += 1
+                else:
+                    temp = df[(df["workload_name"] == wl_name) & (df["strategy"] == strategy)]
+                    y = temp["intra_link_load"] / (temp["intra_link_load"] + temp["inter_link_load"])
+                    ax.plot(x, y,
+                            label="{}_{}".format("DINNRS" if strategy == "SEANRS" else "MDHT",
+                                                 "LP" if wl_name == "LEVEL_PROBABILITY" else "ST"),
+                            color=COLOR_BASE[i], marker=MARKER_BASE[i], markersize=8, linestyle=line_style)
+                    i += 1
+        # y use scientific notation
+        ax.set_xlabel("Request rate", fontsize=16)
+        ax.set_ylabel("Internal ratio", fontsize=16)
+        ax.set_title(title, fontsize=16)
+        # legend can't obstruct the image
+        ax.legend()
+        fig.savefig(self.out_path + "/internal_ratio_new.pdf")
+        plt.show()
+
+    def plot_cache_size_to_avg_latency_line_chart(self, title=""):
+        fig, ax = plt.subplots()
+        fig.set_dpi(300)
+        ax.grid(linestyle="--")
+        ax.ticklabel_format(style="sci", scilimits=(-2, 2))
+        ax.tick_params(labelsize=12)
+        # sieve out the data from dataframe, alpha=0.85, cache=10.0
+        df = self.df[(self.df["alpha"] == 0.85) & (self.df["rate"] == 100000)]
+        # plot DINNRS
+        x = df[(df["lp"] == 0.7)]["cache"].unique() * 10 ** 4
+        i = 0
+        for strategy in ("SEANRS", "MDHT"):
+            line_style = "--" if strategy == "SEANRS" else "-"
+            for lp in (0.3, 0.7):
+                y = df[(df["workload_name"] == "LEVEL_PROBABILITY") &
+                       (df["lp"] == lp) &
+                       (df["strategy"] == strategy)]["avg_latency"]
+                ax.plot(x, y, label="{}_LP_{}".format("DINNRS" if strategy == "SEANRS" else "MDHT", lp),
+                        color=COLOR_BASE[i], marker=MARKER_BASE[i], markersize=8, linestyle=line_style)
+                i += 1
+            y2 = df[(df["workload_name"] == "STATIONARY") & (df["strategy"] == strategy)]["avg_latency"]
+            ax.plot(x, y2, label="{}_ST".format("DINNRS" if strategy == "SEANRS" else "MDHT"), color=COLOR_BASE[i],
+                    marker=MARKER_BASE[i], markersize=8, linestyle=line_style)
+            i += 1
+        ax.set_xlabel("Cache size", fontsize=16)
+        ax.set_ylabel("Average latency (ms)", fontsize=16)
+        ax.set_title(title, fontsize=16)
+        # legend can't obstruct the image
+        ax.legend(bbox_to_anchor=(0.5, 1.17), loc="upper center", borderaxespad=0.5, ncol=3)
+        fig.savefig(self.out_path + "/cache_size_avg_latency_new.pdf")
+        plt.show()
+
+    def plot_resolve_num_levels_bar_chart(self, title=""):
+        fig, ax = plt.subplots()
+        fig.set_dpi(300)
+        ax.grid(linestyle="--", axis="y")
+        ax.tick_params(labelsize=12)
+        ax.ticklabel_format(style="sci", scilimits=(-2, 2))
+        # sieve out the data from dataframe, alpha=0.85, cache=10.0
+        df = self.df[(self.df["alpha"] == 0.85) & (self.df["rate"] == 100000) & (self.df["cache"] == 1)]
+        x = ["level-1", "level-2", "level-3"]
+        i = 0
+        for strategy in ("SEANRS", "MDHT"):
+            for wl_name in ("LEVEL_PROBABILITY", "STATIONARY"):
+                if wl_name == "LEVEL_PROBABILITY":
+                    df_n = df[df["lp"] == 0.7]
+                    y1 = df_n[(df_n["strategy"] == strategy) & (df_n["workload_name"] == wl_name)]["resolve_ctrl"]
+                    y2 = df_n[(df_n["strategy"] == strategy) & (df_n["workload_name"] == wl_name)]["resolve_ibgn"]
+                    y3 = df_n[(df_n["strategy"] == strategy) & (df_n["workload_name"] == wl_name)]["resolve_ebgn"]
+                else:
+                    y1 = df[(df["strategy"] == strategy) & (df["workload_name"] == wl_name)]["resolve_ctrl"]
+                    y2 = df[(df["strategy"] == strategy) & (df["workload_name"] == wl_name)]["resolve_ibgn"]
+                    y3 = df[(df["strategy"] == strategy) & (df["workload_name"] == wl_name)]["resolve_ebgn"]
+
+                y = [y1.values[0], y2.values[0], y3.values[0]]
+                workload_name = "LP" if wl_name == "LEVEL_PROBABILITY" else "ST"
+                ax.bar(np.arange(len(x)) + 0.2 * i, y, width=0.2,
+                       label=f"DINNRS-{workload_name}" if strategy == "SEANRS" else f"MDHT-{workload_name}",
+                       align="center", hatch=HATCH_BASE[i])
+                # 设置x轴的刻度标签为x, 标记位置在x轴上居中
+                ax.set_xticks(np.arange(len(x)) + 0.1 * i)
+                ax.set_xticklabels(x)
+                i += 1
+        ax.set_xlabel("Domain type", fontsize=16)
+        ax.set_ylabel("Resolve number in domains", fontsize=16)
+        ax.set_title(title, fontsize=16)
+        ax.legend()
+        fig.savefig(self.out_path + "/resolve_num_levels_new.pdf")
+        plt.show()
 
 
 class P2(object):
@@ -528,6 +690,9 @@ class P4(object):
     def __init__(self, input_path, out_path):
         self.input_path = input_path
         self.out_path = out_path
+        self.title_map = {"data/movie_processed.csv": "The Movies Dataset",
+                          "data/processed_data.csv": "The BSY Trace Dataset",
+                          "data/zoo_processed.csv": "The Zoo Animals Dataset"}
 
     def read_excel(self, sheet_name, dtype=None):
         """
@@ -536,6 +701,8 @@ class P4(object):
         # read excel, skip empty rows
         df = pd.read_excel(self.input_path, sheet_name=sheet_name, dtype=dtype)
         df.dropna(axis=0, how="all", inplace=True)
+        # 第一行为headers，去掉每个header的空格
+        df.columns = df.columns.str.strip()
         return df
 
     def draw_speed_box_chart(self, show=True):
@@ -554,10 +721,13 @@ class P4(object):
             df["category"] = df["category"].apply(lambda x: CATEGORY_MAP[x])
             # df["set_num"] = df["set_num"].apply(lambda x: math.log(x, 2))
             sns.boxplot(x="set_num", y="time", data=df, hue="category", ax=ax)
-            ax.set_xlabel("Set number", fontsize=14)
-            ax.set_ylabel("Job complete time(us)", fontsize=14)
+            ax.set_xlabel("Set number", fontsize=20)
+            ax.set_ylabel("Job complete time(us)", fontsize=20)
             # y-axis use scientific notation to show
             ax.ticklabel_format(style="sci", axis="y", scilimits=(-2, 2))
+            plt.tight_layout()
+            ax.tick_params(labelsize=16)
+            plt.legend(fontsize=16)
             fig.savefig(self.out_path + "/speed_box_{}.pdf".format(f))
         if show:
             plt.show()
@@ -567,7 +737,7 @@ class P4(object):
         draw space line chart
         """
         sns.set_palette("muted")
-        TYPE_MAP = {"emcf": "EMCF", "cf": "CF-Group", "hashmap": "Hashmap"}
+        TYPE_MAP = {"emcf": "EMCF", "cf": "CFG", "hashmap": "HashTable"}
         fig, ax = plt.subplots()
         ax.grid(linestyle="--")
         df = self.read_excel("summary", dtype={"set_num": int, "mem_used": np.int64})
@@ -577,17 +747,126 @@ class P4(object):
             df = df[df["set_num"] == 16].copy()
         df["type"] = df["type"].apply(lambda x: TYPE_MAP[x])
         sns.lineplot(x=xtype, y="mem_used", hue="type", markers=True, data=df,
-                     ax=ax, markersize=10, linewidth=2, dashes=False, style="type")
+                     ax=ax, markersize=12, linewidth=2, dashes=False, style="type")
         # set line style
         ax.lines[0].set_linestyle("-")
         ax.lines[1].set_linestyle("--")
-        ax.set_xlabel(xtype, fontsize=14)
-        ax.set_ylabel("Space occupied", fontsize=14)
+        ax.set_xlabel(xtype, fontsize=20)
+        ax.set_ylabel("Space occupied", fontsize=20)
         # get rid of legend title
         handles, labels = ax.get_legend_handles_labels()
-        ax.legend(handles=handles[:], labels=labels[:])
+        ax.legend(handles=handles[:], labels=labels[:], fontsize=16)
+        ax.tick_params(labelsize=16)
         # save figure
+        plt.tight_layout()
         fig.savefig(self.out_path + "/space_with_{}.pdf".format(xtype))
+        if show:
+            plt.show()
+
+    def draw_err_rate_line_chart(self, ds_name, show=True):
+        """
+        draw error rate line chart, y axixs is err_rate, x axis is memory used
+        """
+        df = self.read_excel("new",
+                             dtype={"mem_used": int, "error_rate": np.float64, "tpr": np.float64, "query_num": int})
+        fig, ax = plt.subplots()
+        ax.grid(linestyle="--")
+        df = df[df["dataset"] == ds_name].copy()
+        # 按照不同的method画多条线
+        for i, method in enumerate(df["method"].unique()):
+            df_m = df[df["method"] == method].copy()
+            if method == "emcf-v":
+                df_m = df_m[(df_m["query_num"] == 10 ** 6) & (df_m["R"] == 3)].copy()
+            x = df_m["mem_used"]
+            y = df_m["error_rate"]
+            ax.plot(x, y, label=method, markersize=8, color=COLOR_BASE[i], marker=MARKER_BASE[i])
+        # ax.plot(x, y, label="error rate", color=COLOR_BASE[0], marker=MARKER_BASE[0], markersize=8)
+        ax.set_xlabel("Memory used", fontsize=20)
+        ax.set_ylabel("Error rate", fontsize=20)
+        ax.set_title(self.title_map[ds_name], fontsize=20)
+        ax.legend(fontsize=16)
+        ax.tick_params(labelsize=16)
+        out_name = ds_name.replace("/", "_").replace(".csv", "")
+        # save figure use high resolution
+        plt.tight_layout()
+        fig.savefig(self.out_path + "/err_rate_{}.pdf".format(out_name), dpi=300)
+        if show:
+            plt.show()
+
+    def draw_tpr_line_chart(self, ds_name, show=True):
+        """
+        draw query time line chart, y axixs is tpr, x axis is memory used
+        """
+        df = self.read_excel("new", dtype={"mem_used": int, "error_rate": np.float64, "tpr": np.float64})
+        fig, ax = plt.subplots()
+        ax.grid(linestyle="--")
+        df = df[df["dataset"] == ds_name].copy()
+        # 按照不同的method画多条线
+        for i, method in enumerate(df["method"].unique()):
+            df_m = df[df["method"] == method].copy()
+            # if method == "ncf":
+            #     continue
+            if method == "emcf-v":
+                df_m = df_m[(df_m["query_num"] == 10 ** 6) & (df_m["R"] == 3)].copy()
+            x = df_m["mem_used"]
+            y = df_m["tpr"]
+            ax.plot(x, y, label=method, markersize=8, color=COLOR_BASE[i], marker=MARKER_BASE[i])
+        # ax.plot(x, y, label="error rate", color=COLOR_BASE[0], marker=MARKER_BASE[0], markersize=8)
+        ax.set_xlabel("Memory used", fontsize=20)
+        ax.set_ylabel("Query Time (us)", fontsize=20)
+        ax.set_title(self.title_map[ds_name], fontsize=20)
+        ax.legend(fontsize=16)
+        ax.tick_params(labelsize=16)
+        out_name = ds_name.replace("/", "_").replace(".csv", "")
+        # save figure use high resolution
+        plt.tight_layout()
+        fig.savefig(self.out_path + "/tpr_{}.pdf".format(out_name), dpi=300)
+        if show:
+            plt.show()
+
+    def draw_tpr_K_R_line_chart(self, ds_name, show=True):
+        """
+        draw line chart, y axis is tpr, x axis is the parm K and R
+        Exploring the impact of hyperparameters K and R on query time
+        """
+        df = self.read_excel("new", dtype={"mem_used": int, "error_rate": np.float64, "tpr": np.float64})
+        fig, ax = plt.subplots()
+        ax.grid(linestyle="--")
+        df = df[df["dataset"] == ds_name].copy()
+        df_m = df[(df["method"] == "emcf-v") & (df["query_num"] != 10 ** 6)].copy()
+        df_m["K"] = df_m["K"].apply(lambda _x: int(_x))
+        df_m["R"] = df_m["R"].apply(lambda _x: int(_x))
+        df_k = df_m[df_m["R"] == 3].copy()
+        df_r = df_m[df_m["K"] == 64].copy()
+        xr = df_r["R"]
+        yr = df_r["tpr"]
+        ax.plot(xr, yr, label="emcf-v", color=COLOR_BASE[0], marker=MARKER_BASE[0], markersize=8)
+        ax.set_xlabel("Replication number", fontsize=20)
+        ax.set_ylabel("Query Time (us)", fontsize=20)
+        ax.set_title(self.title_map[ds_name], fontsize=20)
+        ax.tick_params(labelsize=16)
+        ax.legend(fontsize=16)
+        out_name = ds_name.replace("/", "_").replace(".csv", "")
+        # save figure use high resolution
+        plt.tight_layout()
+        fig.savefig(self.out_path + "/tpr_R_{}.pdf".format(out_name), dpi=300)
+        if show:
+            plt.show()
+        xk = df_k["K"]
+        yk = df_k["tpr"]
+        xk, yk = zip(*sorted(zip(xk, yk)))
+        fig, ax = plt.subplots()
+        ax.grid(linestyle="--")
+        ax.plot(xk, yk, label="emcf-v", color=COLOR_BASE[0], marker=MARKER_BASE[0], markersize=8)
+        ax.set_xlabel("Size of bit vector K (bit)", fontsize=20)
+        ax.set_ylabel("Query Time (us)", fontsize=20)
+        ax.set_title(self.title_map[ds_name], fontsize=20)
+        ax.tick_params(labelsize=16)
+        ax.legend(fontsize=16)
+        out_name = ds_name.replace("/", "_").replace(".csv", "")
+        # save figure use high resolution
+        plt.tight_layout()
+        fig.savefig(self.out_path + "/tpr_K_{}.pdf".format(out_name), dpi=300)
         if show:
             plt.show()
 
@@ -612,6 +891,13 @@ def run(input_file, output_path):
     # df = pd.read_excel(input_file, sheet_name="load", skiprows=1, dtype="float")
     # plot_internal_ratio(df, "Request rate(/s)", "Internal ratio", "",
     #                     output_path + "/internal_ratio.pdf")
+    # ---------------------------paper 1-------------------------------
+
+    # p1 = P1(input_file, output_path)
+    # p1.plot_link_load_rate_line_chart()
+    # p1.plot_intra_ratio_line_chart()
+    # p1.plot_cache_size_to_avg_latency_line_chart()
+    # p1.plot_resolve_num_levels_bar_chart()
 
     # ---------------------------paper 2-------------------------------
     # plot_cache_hit_ratio_seq_line_chart
@@ -632,7 +918,10 @@ def run(input_file, output_path):
     p4 = P4(input_file, output_path)
     # p4.draw_speed_box_chart()
     # p4.draw_space_line_chart("set_num")
-    p4.draw_space_line_chart("capacity")
+    # p4.draw_space_line_chart("capacity")
+    p4.draw_err_rate_line_chart("data/processed_data.csv")
+    p4.draw_tpr_line_chart("data/processed_data.csv")
+    # p4.draw_tpr_K_R_line_chart("data/movie_processed.csv")
 
 
 def main():

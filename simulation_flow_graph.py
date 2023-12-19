@@ -7,8 +7,8 @@ from tqdm import tqdm
 from pyecharts import options as opts
 from pyecharts.globals import ThemeType
 from pyecharts.charts import Graph
+from pyecharts.render import make_snapshot
 import numpy as np
-import pandas as pd
 import json
 import logging
 
@@ -31,6 +31,7 @@ def g_make(nodes, links, categories, layout) -> Graph:
                 width="1600px", height="950px",
                 page_title="FlowGraph",
                 theme=ThemeType.WHITE,
+                js_host="./js/",
                 chart_id="1a53dbfa024e4c22b72f77a579c0c63b",
                 animation_opts=opts.AnimationOpts()
             )
@@ -47,7 +48,7 @@ def g_make(nodes, links, categories, layout) -> Graph:
             # itemstyle_opts=opts.ItemStyleOpts(color="rgb(230,73,74)", border_color="rgb(255,148,149)", border_width=3)
         )
         .set_global_opts(
-            title_opts=opts.TitleOpts(title="Simulation_Topology_Graph", subtitle="Link unit: " + TRAFFIC_UNIT_PRINT),
+            title_opts=opts.TitleOpts(title="Simulation_Flow_Graph", subtitle="Link unit: " + TRAFFIC_UNIT_PRINT),
             legend_opts=opts.LegendOpts(legend_icon="circle"),
             toolbox_opts=opts.ToolboxOpts(is_show=True, orient="vertical", pos_left="right",
                                           feature=opts.ToolBoxFeatureOpts(
@@ -314,16 +315,18 @@ def run(layout: str = "force", title="Simulation_Flow_Graph") -> Graph:
     symbol_list = ["circle", "roundRect", "rect", "triangle", "diamond"]  # 分别代表router, receiver，source，switch，bgn
     labels_tuple = ("RCV", "SRC", "SW", "BGN")
     # ! 创建节点 ======================================================================
+    max_val = 0
     for line in all_data:
         startNode, endNode, s_cat, e_cat, s_val, e_val = line[:6]
         nodes[startNode] = (s_val, s_cat, type_data.get(str(startNode), 0))
         nodes[endNode] = (e_val, e_cat, type_data.get(str(endNode), 0))
+        max_val = max(max_val, s_val, e_val)
     # print(nodes.keys())
     for key in tqdm(nodes.keys(), desc="Creating Nodes: "):
         _name = str(key)
         _ctrl = 0  # 标记属于哪个控制域
-        _symbol_size = NODE_NORMAL_SIZE + int(nodes[key][0] / TRAFFIC_UNIT) if int(
-            nodes[key][0]) else NODE_NORMAL_SIZE
+        # _symbol_size 控制在一倍的NODE_NORMAL_SIZE - 两倍的NODE_NORMAL_SIZE之间
+        _symbol_size = NODE_NORMAL_SIZE + nodes[key][0] / max_val * NODE_NORMAL_SIZE * 0.8
         # 对特殊节点进行单独标识 -----------------------------------------------------
         if nodes[key][2] > 0:
             _symbol_size = _symbol_size * 1.2
@@ -355,7 +358,7 @@ def run(layout: str = "force", title="Simulation_Flow_Graph") -> Graph:
                            symbol=str(symbol_list[nodes[key][2]]),
                            # symbol="image://pics/acc-sw.svg",
                            symbol_size=_symbol_size,
-                           value=[str(nodes[key][0]), _ctrl],
+                           value=[str(round(nodes[key][0]/TRAFFIC_UNIT, 2)), _ctrl],
                            category=int(nodes[key][1] - 1),
                            label_opts=_label_opts,
                            tooltip_opts=_tooltip_opts,
@@ -363,8 +366,10 @@ def run(layout: str = "force", title="Simulation_Flow_Graph") -> Graph:
                            )
         )
     # ! 创建边 ========================================================================
+    max_line_val = 0
     for line in tqdm(all_data, desc="Creating Links: "):
         startNode, endNode, s_cat, e_cat, s_val, e_val, link_val, flag = line
+        max_line_val = max(max_line_val, link_val)
         # color_r = str(150 - link_val)
         # color = "rgb(" + color_r + "," + color_r + "," + color_r + ")"
         if flag == 0:
@@ -380,7 +385,7 @@ def run(layout: str = "force", title="Simulation_Flow_Graph") -> Graph:
                                value=round(link_val / TRAFFIC_UNIT, 2),
                                symbol=["none", "none"],
                                symbol_size=10 + int(link_val / TRAFFIC_UNIT),
-                               linestyle_opts=opts.LineStyleOpts(width=2 + link_val / TRAFFIC_UNIT,
+                               linestyle_opts=opts.LineStyleOpts(width=2 + link_val / max_line_val * 6,
                                                                  type_="solid",
                                                                  color="#495057",
                                                                  opacity=0.8),
@@ -398,7 +403,7 @@ def run(layout: str = "force", title="Simulation_Flow_Graph") -> Graph:
                                value=int(link_val),
                                symbol=["none", "none"],
                                symbol_size=10 + int(link_val / TRAFFIC_UNIT),
-                               linestyle_opts=opts.LineStyleOpts(width=2 + link_val / TRAFFIC_UNIT, type_="solid",
+                               linestyle_opts=opts.LineStyleOpts(width=2 + link_val / max_line_val * 6, type_="solid",
                                                                  color="green"),
                                label_opts=opts.LabelOpts(is_show=True, position="middle",
                                                          formatter="{c}",
@@ -407,13 +412,13 @@ def run(layout: str = "force", title="Simulation_Flow_Graph") -> Graph:
                                                          )
                                )
             )
-    # 创建类别 ========================================================================
+    # ! 创建类别 ========================================================================
     category_set = set(list(all_data[:, 2]) + list(all_data[:, 3]))
     for cate in category_set:
         category_data.append(
             opts.GraphCategory(name="AS:" + str(cate))
         )
-    # 生成关系图 =======================================================================
+    # ! 生成关系图 =======================================================================
     graph_ = g_make(nodes_data, links_data, category_data, layout)
     logger.info("Graph Created!")
 
@@ -432,6 +437,7 @@ def run(layout: str = "force", title="Simulation_Flow_Graph") -> Graph:
         '''
     )
     graph_.render(title + ".html")
+    # make_snapshot(snapshot, graph_.render(), title + ".pdf")
     get_node_num(nodes)  # 获取每个社区的节点数目
     return graph_
 
@@ -446,8 +452,8 @@ if __name__ == '__main__':
     layout_file = data_source_dir + "layout.txt"
     node_type_file = data_source_dir + "node_type.txt"
     NODE_NORMAL_SIZE = 15  # Identifies the standard size of a common no-flow node
-    TRAFFIC_UNIT = 10 ** 7  # * The magnitude of traffic data
-    TRAFFIC_UNIT_PRINT = "10M"  # * The unit of traffic data for print, need to change with the TRAFFIC_UNIT
+    TRAFFIC_UNIT = 10 ** 6  # * The magnitude of traffic data
+    TRAFFIC_UNIT_PRINT = "1M"  # * The unit of traffic data for print, need to change with the TRAFFIC_UNIT
     graph = run(layout="force")
     print("done!")
 #   定时10s刷新html页面
