@@ -24,7 +24,7 @@ handler.setFormatter(formatter)
 logger.addHandler(handler)
 
 
-def g_make(nodes, links, categories, layout) -> Graph:
+def g_make(nodes, links, categories, layout, title) -> Graph:
     c = (
         Graph(
             opts.InitOpts(
@@ -48,7 +48,7 @@ def g_make(nodes, links, categories, layout) -> Graph:
             # itemstyle_opts=opts.ItemStyleOpts(color="rgb(230,73,74)", border_color="rgb(255,148,149)", border_width=3)
         )
         .set_global_opts(
-            title_opts=opts.TitleOpts(title="Simulation_Flow_Graph", subtitle="Link unit: " + TRAFFIC_UNIT_PRINT),
+            title_opts=opts.TitleOpts(title=title, subtitle="Link unit: " + TRAFFIC_UNIT_PRINT),
             legend_opts=opts.LegendOpts(legend_icon="circle"),
             toolbox_opts=opts.ToolboxOpts(is_show=True, orient="vertical", pos_left="right",
                                           feature=opts.ToolBoxFeatureOpts(
@@ -284,12 +284,13 @@ def get_node_num(nodes: dict) -> None:
     print(json.dumps(num_dict, sort_keys=True, indent=4))
 
 
-def run(layout: str = "force", title="Simulation_Flow_Graph") -> Graph:
+def run(layout: str = "force", title="Simulation_Flow_Graph", showlabel=True) -> Graph:
     """
     主函数，按照需求生成所有节点和边，并渲染输出
     :param title: 生成html文件的标题
-    :return: Graph 对象
     :param layout: 共三种方式，"force","manual","file"
+    :param showlabel: 是否显示节点标签
+    :return: Graph 对象
     "force"   是力引导模型，用于调试，可以拖动;
     "manual"  可以初始化时确定部分点的坐标，坐标在 manual_set_node() 中确定;
     "file"    从layout文件中读取坐标"
@@ -334,13 +335,13 @@ def run(layout: str = "force", title="Simulation_Flow_Graph") -> Graph:
             _formatter = labels_tuple[nodes[key][2] - 1] + ":{b}, load,ctrl:{c} "
             # _item_style_opts = opts.ItemStyleOpts(border_width=2, border_color="red")
             _item_style_opts = None
-            _label_opts = opts.LabelOpts(is_show=True, position="bottom", font_size=14, font_weight="bold",
+            _label_opts = opts.LabelOpts(is_show=showlabel, position="bottom", font_size=14, font_weight="bold",
                                          formatter=_label_formatter)
             _tooltip_opts = opts.TooltipOpts(trigger="item", formatter=_formatter)
         # 普通节点标识 --------------------------------------------------------------
         else:
             _formatter = "ID:{b}, load, ctrl = {c}"
-            _label_opts = opts.LabelOpts(is_show=True, position="bottom", font_size=12, font_weight="normal")
+            _label_opts = opts.LabelOpts(is_show=showlabel, position="bottom", font_size=12, font_weight="normal")
             _item_style_opts = None
             _tooltip_opts = opts.TooltipOpts(formatter=_formatter)
         # 添加节点
@@ -419,7 +420,7 @@ def run(layout: str = "force", title="Simulation_Flow_Graph") -> Graph:
             opts.GraphCategory(name="AS:" + str(cate))
         )
     # ! 生成关系图 =======================================================================
-    graph_ = g_make(nodes_data, links_data, category_data, layout)
+    graph_ = g_make(nodes_data, links_data, category_data, layout, title)
     logger.info("Graph Created!")
 
     # 增加鼠标拖动点固定位置的js代码
@@ -454,7 +455,7 @@ if __name__ == '__main__':
     NODE_NORMAL_SIZE = 15  # Identifies the standard size of a common no-flow node
     TRAFFIC_UNIT = 10 ** 6  # * The magnitude of traffic data
     TRAFFIC_UNIT_PRINT = "1M"  # * The unit of traffic data for print, need to change with the TRAFFIC_UNIT
-    graph = run(layout="force")
+    graph = run(layout="force", title="TISCALI_SEA Topology", showlabel=False)
     print("done!")
 #   定时10s刷新html页面
 #   <meta http-equiv="Refresh" content="10"/>

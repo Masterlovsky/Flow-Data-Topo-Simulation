@@ -10,6 +10,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+from matplotlib.font_manager import FontProperties
+
 # Logger object
 logger = logging.getLogger("plot")
 sns.set_context("paper", font_scale=1.25)
@@ -24,22 +26,29 @@ MARKER_BASE = ["o", "^", "X", "s", "p", "P", ">", "*", "h", "H", "D", "d", "v", 
                "|", "_", "."]
 COLOR_BASE = ["r", "b", "g", "c", "m", "y", "k", "#FFA500", "#FFC0CB", "#FFD700", "#FF00FF", "#FF1493", "#FF4500", ]
 HATCH_BASE = ["", "//", "XX", "++", "\\\\", "-", "||", "o", "O", ".", "*"]
+fontCN = FontProperties(fname=r"C:\Users\17168\AppData\Local\Microsoft\Windows\Fonts\HarmonyOS_Sans_SC_Regular.ttf")
 
 
 def plot_mean_delay_chart(df, xlabel, ylabel, title, output, show=True):
-    sns.set_style("whitegrid")
     fig, ax = plt.subplots()
+    fig.set_dpi(300)
+    ax.grid(linestyle="--")
+    # use sci format, fonts and size
+    # ax.ticklabel_format(style="sci", scilimits=(-2, 2))
+    # ax.tick_params(labelsize=12)
     ax.grid(linestyle="--")
     x, y1, y2, y3, z3 = df["nodes"], df[0.65], df[0.75], df[0.85], df["0.85.1"]
     # ax.plot(x, y1, label="DINNRS α=0.65", color="b", marker="o", markersize=8)
     # ax.plot(x, y2, label="DINNRS α=0.75", color="g", marker="^", markersize=8)
     ax.plot(x, y3, label="DINNRS α=0.85", color="r", marker=">", markersize=8)
     ax.plot(x, z3, label="MDHT α=0.85", color="b", marker="X", markersize=8)
-    ax.set_xlabel(xlabel, fontsize=14)
-    ax.set_ylabel(ylabel, fontsize=14)
+    ax.set_xlabel(xlabel, fontsize=20, fontproperties=fontCN)
+    ax.set_ylabel(ylabel, fontsize=20, fontproperties=fontCN)
     ax.set_title(title)
-    ax.legend()
-    fig.savefig(output)
+    ax.legend(fontsize=16)
+    ax.tick_params(labelsize=16)
+    plt.tight_layout()
+    fig.savefig(output, dpi=300)
     if show:
         plt.show()
 
@@ -137,13 +146,12 @@ class P1(object):
 
     def plot_link_load_rate_line_chart(self, title=""):
         REQ_PKT_SIZE = 150
-        fig, ax = plt.subplots()
-        # set resolution to 300 dpi
+        fig, ax = plt.subplots(figsize=(6, 5))
         fig.set_dpi(300)
         ax.grid(linestyle="--")
         # use sci format, fonts and size
         ax.ticklabel_format(style="sci", scilimits=(-2, 2))
-        ax.tick_params(labelsize=12)
+        ax.tick_params(labelsize=16)
         # sieve out the data from dataframe, alpha=0.85, cache=10.0
         df = self.df[(self.df["alpha"] == 0.85) & (self.df["cache"] == 0.1)]
         x = df["rate"].sort_values(ascending=True).unique()
@@ -169,22 +177,25 @@ class P1(object):
                             color=COLOR_BASE[i], marker=MARKER_BASE[i], markersize=8, linestyle=line_style)
                     i += 1
         # y use scientific notation
-        ax.set_xlabel("Request rate", fontsize=16)
-        ax.set_ylabel("Average link load", fontsize=16)
+        # ax.set_xlabel("Request rate", fontsize=16)
+        # ax.set_ylabel("Average link load", fontsize=16)
+        ax.set_xlabel("请求速率", fontsize=20, fontproperties=fontCN)
+        ax.set_ylabel("平均链路负载", fontsize=20, fontproperties=fontCN)
         ax.set_title(title, fontsize=16)
         # legend can't obstruct the image
-        ax.legend()
-        fig.savefig(self.out_path + "/link_load_rate_new.pdf")
+        plt.tight_layout()
+        ax.legend(fontsize=14)
+        fig.savefig(self.out_path + "/link_load_rate_new.png", dpi=300)
         plt.show()
 
     def plot_intra_ratio_line_chart(self, title=""):
-        fig, ax = plt.subplots()
+        fig, ax = plt.subplots(figsize=(6, 5))
         # set resolution to 300 dpi
         fig.set_dpi(300)
         ax.grid(linestyle="--")
         # use sci format, fonts and size
         ax.ticklabel_format(style="sci", scilimits=(-2, 2))
-        ax.tick_params(labelsize=12)
+        ax.tick_params(labelsize=16)
         # sieve out the data from dataframe, alpha=0.85, cache=10.0
         df = self.df[(self.df["alpha"] == 0.85) & (self.df["cache"] == 0.1)]
         x = df["rate"].sort_values(ascending=True).unique()
@@ -210,20 +221,24 @@ class P1(object):
                             color=COLOR_BASE[i], marker=MARKER_BASE[i], markersize=8, linestyle=line_style)
                     i += 1
         # y use scientific notation
-        ax.set_xlabel("Request rate", fontsize=16)
-        ax.set_ylabel("Internal ratio", fontsize=16)
-        ax.set_title(title, fontsize=16)
+        # ax.set_xlabel("Request rate", fontsize=16)
+        # ax.set_ylabel("Internal ratio", fontsize=16)
+        ax.set_xlabel("请求速率", fontsize=20, fontproperties=fontCN)
+        ax.set_ylabel("域内解析率", fontsize=20, fontproperties=fontCN)
+        ax.set_title(title, fontsize=20)
         # legend can't obstruct the image
-        ax.legend()
-        fig.savefig(self.out_path + "/internal_ratio_new.pdf")
+        ax.legend(fontsize=14)
+        plt.tight_layout()
+        fig.savefig(self.out_path + "/internal_ratio_new.png", dpi=300)
         plt.show()
 
     def plot_cache_size_to_avg_latency_line_chart(self, title=""):
-        fig, ax = plt.subplots()
+        # fig, ax = plt.subplots()
+        fig, ax = plt.subplots(figsize=(6, 5))
         fig.set_dpi(300)
         ax.grid(linestyle="--")
         ax.ticklabel_format(style="sci", scilimits=(-2, 2))
-        ax.tick_params(labelsize=12)
+        ax.tick_params(labelsize=16)
         # sieve out the data from dataframe, alpha=0.85, cache=10.0
         df = self.df[(self.df["alpha"] == 0.85) & (self.df["rate"] == 100000)]
         # plot DINNRS
@@ -242,19 +257,22 @@ class P1(object):
             ax.plot(x, y2, label="{}_ST".format("DINNRS" if strategy == "SEANRS" else "MDHT"), color=COLOR_BASE[i],
                     marker=MARKER_BASE[i], markersize=8, linestyle=line_style)
             i += 1
-        ax.set_xlabel("Cache size", fontsize=16)
-        ax.set_ylabel("Average latency (ms)", fontsize=16)
-        ax.set_title(title, fontsize=16)
+        # ax.set_xlabel("Cache size", fontsize=16)
+        # ax.set_ylabel("Average latency (ms)", fontsize=16)
+        ax.set_xlabel("缓存空间", fontsize=20, fontproperties=fontCN)
+        ax.set_ylabel("平均时延 (ms)", fontsize=20, fontproperties=fontCN)
+        ax.set_title(title, fontsize=20)
         # legend can't obstruct the image
         ax.legend(bbox_to_anchor=(0.5, 1.17), loc="upper center", borderaxespad=0.5, ncol=3)
-        fig.savefig(self.out_path + "/cache_size_avg_latency_new.pdf")
+        plt.tight_layout()
+        fig.savefig(self.out_path + "/cache_size_avg_latency_new.pdf", dpi=300)
         plt.show()
 
     def plot_resolve_num_levels_bar_chart(self, title=""):
-        fig, ax = plt.subplots()
+        fig, ax = plt.subplots(figsize=(6, 5))
         fig.set_dpi(300)
         ax.grid(linestyle="--", axis="y")
-        ax.tick_params(labelsize=12)
+        ax.tick_params(labelsize=16)
         ax.ticklabel_format(style="sci", scilimits=(-2, 2))
         # sieve out the data from dataframe, alpha=0.85, cache=10.0
         df = self.df[(self.df["alpha"] == 0.85) & (self.df["rate"] == 100000) & (self.df["cache"] == 1)]
@@ -281,11 +299,14 @@ class P1(object):
                 ax.set_xticks(np.arange(len(x)) + 0.1 * i)
                 ax.set_xticklabels(x)
                 i += 1
-        ax.set_xlabel("Domain type", fontsize=16)
-        ax.set_ylabel("Resolve number in domains", fontsize=16)
-        ax.set_title(title, fontsize=16)
-        ax.legend()
-        fig.savefig(self.out_path + "/resolve_num_levels_new.pdf")
+        # ax.set_xlabel("Domain type", fontsize=16)
+        # ax.set_ylabel("Resolve number in domains", fontsize=16)
+        ax.set_xlabel("解析域类型", fontsize=20, fontproperties=fontCN)
+        ax.set_ylabel("解析请求数", fontsize=20, fontproperties=fontCN)
+        ax.set_title(title, fontsize=20)
+        ax.legend(fontsize=14)
+        plt.tight_layout()
+        fig.savefig(self.out_path + "/resolve_num_levels_new.png", dpi=300)
         plt.show()
 
 
@@ -301,7 +322,10 @@ class P2(object):
                            "group": "AC-OPT"}
 
     def plot_cache_hit_ratio_seq_line_chart(self, xlabel, ylabel, title="", show=True, date="0610"):
-        fig, ax = plt.subplots()
+        fig, ax = plt.subplots(figsize=(6, 5))
+        fig.set_dpi(300)
+        ax.tick_params(labelsize=16)
+        ax.ticklabel_format(style="sci", scilimits=(-2, 2))
         ax.grid(linestyle="--")
         # read file from path and get label from file name
         real_path = os.path.join(self.input_path, date)
@@ -327,9 +351,12 @@ class P2(object):
 
         ax.legend()
         ax.set_title(title)
-        ax.set_xlabel(xlabel, fontsize=14)
-        ax.set_ylabel(ylabel, fontsize=14)
-        fig.savefig(self.out_path + "/cache_hit_ratio_seq_{}.pdf".format(date))
+        # ax.set_xlabel(xlabel, fontsize=14)
+        # ax.set_ylabel(ylabel, fontsize=14)
+        ax.set_xlabel(xlabel, fontsize=20, fontproperties=fontCN)
+        ax.set_ylabel(ylabel, fontsize=20, fontproperties=fontCN)
+        plt.tight_layout()
+        fig.savefig(self.out_path + "/cache_hit_ratio_seq_{}.png".format(date), dpi=300)
         if show:
             plt.show()
 
@@ -339,7 +366,7 @@ class P2(object):
         each bar is a group of four bars, each bar is a different algorithm
         """
         sns.set_palette("Set3")
-        date_list = os.listdir(self.input_path)
+        date_list = ["0610", "0611", "0612", "0613", "0614", "0615", "0616"]
         method_f_l = os.listdir(os.path.join(self.input_path, date_list[0]))
         res = collections.defaultdict(dict)
         for date in date_list:
@@ -354,7 +381,9 @@ class P2(object):
                     res[date][method] = avg_chr
 
         # draw bar chart
-        fig, ax = plt.subplots()
+        fig, ax = plt.subplots(figsize=(6.5, 5))
+        fig.set_dpi(300)
+        ax.tick_params(labelsize=16)
         ax.grid(linestyle="--")
         x = np.arange(len(date_list))
         width = 0.15
@@ -369,11 +398,14 @@ class P2(object):
             i += 1
         ax.set_xticks(x + width * 2)
         ax.set_xticklabels(date_list)
-        ax.set_xlabel("Date", fontsize=14)
-        ax.set_ylabel("Average cache hit ratio", fontsize=14)
+        # ax.set_xlabel("Date", fontsize=14)
+        # ax.set_ylabel("Average cache hit ratio", fontsize=14)
+        ax.set_xlabel("数据集", fontsize=20, fontproperties=fontCN)
+        ax.set_ylabel("平均缓存命中率", fontsize=20, fontproperties=fontCN)
         ax.set_title(title)
+        plt.tight_layout()
         ax.legend()
-        fig.savefig(self.out_path + "/avg_cache_hit_ratio_bar.pdf")
+        fig.savefig(self.out_path + "/avg_cache_hit_ratio_bar.png", dpi=300)
         if show:
             plt.show()
 
@@ -465,6 +497,7 @@ class P2(object):
         plot alpha to average cache hit ratio and average space remaining ratio bar chart in one figure
         """
         fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True)
+        fig.set_dpi(300)
         ax1.grid(linestyle="--")
         ax2.grid(linestyle="--")
         path = self.input_path + "/alpha"
@@ -487,7 +520,8 @@ class P2(object):
         for i, bar in enumerate(b2.patches):
             bar.set_hatch(HATCH_BASE[i // alpha_len])
         # x-axis label and x-axis tick label should be in the middle of two subplots
-        ax2.set_xlabel("Alpha", fontsize=16, labelpad=5)
+        # ax2.set_xlabel("Alpha", fontsize=16, labelpad=5)
+        ax2.set_xlabel("空间利用配额α", fontsize=16, labelpad=5, fontproperties=fontCN)
         ax2.tick_params(axis="x", pad=1)
         ax1.set_xlabel("")
         ax2.xaxis.set_ticks_position("top")
@@ -495,10 +529,12 @@ class P2(object):
         ax1.legend(bbox_to_anchor=(0.5, 1.2), loc="upper center", borderaxespad=0.0, ncol=df["methods"].nunique())
         # ax2.legend(bbox_to_anchor=(0.5, -0.05), loc="upper center", borderaxespad=0.0, ncol=df["methods"].nunique())
         ax2.legend().set_visible(False)
-        ax1.set_ylabel("Average CHR", fontsize=16)
-        ax2.set_ylabel("Space occupied", fontsize=16)
+        # ax1.set_ylabel("Average CHR", fontsize=16)
+        ax1.set_ylabel("平均缓存命中率", fontsize=16, fontproperties=fontCN)
+        # ax2.set_ylabel("Space occupied", fontsize=16)
+        ax2.set_ylabel("空间占用", fontsize=16, fontproperties=fontCN)
         ax1.set_title(title)
-        fig.savefig(os.path.join(self.out_path, out_f))
+        fig.savefig(os.path.join(self.out_path, out_f), dpi=300)
         if show:
             plt.show()
 
@@ -555,6 +591,7 @@ class P2(object):
         plot t0 to average cache hit ratio and average space remaining ratio bar chart in one figure
         """
         fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True)
+        fig.set_dpi(300)
         ax1.grid(linestyle="--")
         ax2.grid(linestyle="--")
         path = self.input_path + "/t0"
@@ -576,7 +613,8 @@ class P2(object):
         for i, bar in enumerate(b2.patches):
             bar.set_hatch(HATCH_BASE[i // alpha_len])
         # x-axis label and x-axis tick label should be in the middle of two subplots
-        ax2.set_xlabel("Default time-to-live ${t0}$", fontsize=16, labelpad=5)
+        # ax2.set_xlabel("Default time-to-live ${t0}$", fontsize=16, labelpad=5)
+        ax2.set_xlabel("默认超时时间 ${t_0}$", fontsize=16, labelpad=5, fontproperties=fontCN)
         ax2.tick_params(axis="x", pad=1)
         ax1.set_xlabel("")
         ax2.xaxis.set_ticks_position("top")
@@ -584,8 +622,10 @@ class P2(object):
         ax1.legend(bbox_to_anchor=(0.5, 1.2), loc="upper center", borderaxespad=0.0, ncol=df["methods"].nunique())
         # ax2.legend(bbox_to_anchor=(0.5, -0.05), loc="upper center", borderaxespad=0.0, ncol=df["methods"].nunique())
         ax2.legend().set_visible(False)
-        ax1.set_ylabel("Average CHR", fontsize=16)
-        ax2.set_ylabel("Space occupied", fontsize=16)
+        # ax1.set_ylabel("Average CHR", fontsize=16)
+        ax1.set_ylabel("平均缓存命中率", fontsize=16, fontproperties=fontCN)
+        # ax2.set_ylabel("Space occupied", fontsize=16)
+        ax2.set_ylabel("空间占用", fontsize=16, fontproperties=fontCN)
         ax1.set_title(title)
         fig.savefig(os.path.join(self.out_path, out_f))
         if show:
@@ -635,7 +675,7 @@ class P2(object):
         ax1.set_xlabel("Recommended candidate set size", fontsize=14)
         ax1.set_ylabel("Space remaining ratio", fontsize=14)
         ax1.set_title(title)
-        fig.savefig(self.out_path + "/k_to_avg_space_bar.pdf")
+        fig.savefig(self.out_path + "/k_to_avg_space_bar.png")
         if show:
             plt.show()
 
@@ -644,6 +684,7 @@ class P2(object):
         plot k to average cache hit ratio and average space remaining ratio bar chart in one figure
         """
         fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True)
+        fig.set_dpi(300)
         ax1.grid(linestyle="--")
         ax2.grid(linestyle="--")
         path = self.input_path + "/k"
@@ -666,7 +707,8 @@ class P2(object):
         for i, bar in enumerate(bar2.patches):
             bar.set_hatch(HATCH_BASE[i // alpha_len])
         # x-axis label and x-axis tick label should be in the middle of two subplots
-        ax2.set_xlabel("Recommended candidate set size ${k}$", fontsize=16, labelpad=5)
+        # ax2.set_xlabel("Recommended candidate set size ${k}$", fontsize=16, labelpad=5)
+        ax2.set_xlabel("推荐候选集合大小 ${k}$", fontsize=16, labelpad=5, fontproperties=fontCN)
         ax2.tick_params(axis="x", pad=1)
         ax1.set_xlabel("")
         ax2.xaxis.set_ticks_position("top")
@@ -674,10 +716,92 @@ class P2(object):
         ax1.legend(bbox_to_anchor=(0.5, 1.2), loc="upper center", borderaxespad=0.0, ncol=df["methods"].nunique())
         # ax2.legend(bbox_to_anchor=(0.5, -0.05), loc="upper center", borderaxespad=0.0, ncol=df["methods"].nunique())
         ax2.legend().set_visible(False)
-        ax1.set_ylabel("Average CHR", fontsize=16)
-        ax2.set_ylabel("Space occupied", fontsize=16)
+        # ax1.set_ylabel("Average CHR", fontsize=16)
+        ax1.set_ylabel("平均缓存命中率", fontsize=16, fontproperties=fontCN)
+        # ax2.set_ylabel("Space occupied", fontsize=16)
+        ax2.set_ylabel("空间占用", fontsize=16, fontproperties=fontCN)
         ax1.set_title(title)
         fig.savefig(os.path.join(self.out_path, out_f))
+        if show:
+            plt.show()
+
+
+class P3(object):
+    """
+    draw pictures for paper 3
+    """
+
+    def __init__(self, input_file, out_path):
+        self.input_file = input_file
+        self.out_path = out_path
+
+    def read_csv(self):
+        """
+        read csv file to pandas dataframe
+        """
+        df = pd.read_csv(self.input_file, header=0, index_col=None)
+        df["workload"] = df["workload"].apply(lambda x: x.split("_")[0])
+        df.sort_values(by=["workload", "method"], inplace=True)
+        df.reset_index(drop=True, inplace=True)
+        # print(df)
+        return df
+
+    def plot_nsd_bar_chart(self, show=True):
+        """
+        plot bar chart for paper 3
+        """
+        df = self.read_csv()
+        fig, ax = plt.subplots()
+        fig.set_dpi(300)
+        ax.grid(linestyle="--")
+        ax.tick_params(labelsize=16)
+        ax.ticklabel_format(style="sci", axis="y", scilimits=(-2, 2))
+        # draw bar chart
+        # make value of y-axis not start from 0 to make the vertical coordinate difference more pronounced
+        b = sns.barplot(x="workload", y="nsd_internal", data=df, ax=ax, hue="method", errorbar=("ci", 90),
+                        errwidth=1, capsize=0.1)
+        # set hatch for each bar based on method, same method use same hatch
+        group_len = len(df["workload"].unique())
+        for i, bar in enumerate(b.patches):
+            bar.set_hatch(HATCH_BASE[i // group_len])
+        ax.set_xlabel("流量负载", fontsize=18, fontproperties=fontCN)
+        # ax.set_xlabel("workload", fontsize=20)
+        ax.set_ylabel("链路负载归一化标准差", fontsize=18, fontproperties=fontCN)
+        # ax.set_ylabel("linkload nsd ", fontsize=20)
+        # ax.set_title("nsd linkload", fontsize=20)
+        plt.legend(fontsize=16)
+        sns.set_style("whitegrid")
+        plt.tight_layout()
+        fig.savefig(self.out_path + "/nsd_linkload.png", dpi=300)
+        if show:
+            plt.show()
+
+    def plot_max_src_load_bar_chart(self, show=True):
+        """
+        plot bar chart for paper 3
+        """
+        df = self.read_csv()
+        fig, ax = plt.subplots()
+        fig.set_dpi(300)
+        ax.grid(linestyle="--")
+        ax.tick_params(labelsize=16)
+        ax.ticklabel_format(style="sci", axis="y", scilimits=(-2, 2))
+        # draw bar chart
+        b = sns.barplot(x="workload", y="max_source_load", data=df, ax=ax, hue="method", errorbar=("ci", 90),
+                        errwidth=1, capsize=0.1)
+        # set hatch and color
+        group_len = len(df["workload"].unique())
+        for i, bar in enumerate(b.patches):
+            bar.set_hatch(HATCH_BASE[i // group_len])
+        # ax.set_xlabel("workload", fontsize=20)
+        ax.set_xlabel("流量负载", fontsize=18, fontproperties=fontCN)
+        # ax.set_ylabel("Max source load", fontsize=20)
+        ax.set_ylabel("最大源端负载", fontsize=18, fontproperties=fontCN)
+        plt.legend(fontsize=16)
+        # ax.set_title("Max source load", fontsize=20)
+        sns.set_style("whitegrid")
+        plt.tight_layout()
+        fig.savefig(self.out_path + "/max_src_load.png", dpi=300)
         if show:
             plt.show()
 
@@ -716,19 +840,22 @@ class P4(object):
         filter_category = df_speed["filter"].unique()
         for f in filter_category:
             fig, ax = plt.subplots()
+            fig.set_dpi(300)
             ax.grid(linestyle="--")
             df = df_speed[df_speed["filter"] == f].copy()
             df["category"] = df["category"].apply(lambda x: CATEGORY_MAP[x])
             # df["set_num"] = df["set_num"].apply(lambda x: math.log(x, 2))
             sns.boxplot(x="set_num", y="time", data=df, hue="category", ax=ax)
-            ax.set_xlabel("Set number", fontsize=20)
-            ax.set_ylabel("Job complete time(us)", fontsize=20)
+            # ax.set_xlabel("Set number", fontsize=20)
+            ax.set_xlabel("子集数目", fontsize=20, fontproperties=fontCN)
+            # ax.set_ylabel("Job complete time(us)", fontsize=20)
+            ax.set_ylabel("任务完成时间 (us)", fontsize=20, fontproperties=fontCN)
             # y-axis use scientific notation to show
             ax.ticklabel_format(style="sci", axis="y", scilimits=(-2, 2))
             plt.tight_layout()
             ax.tick_params(labelsize=16)
             plt.legend(fontsize=16)
-            fig.savefig(self.out_path + "/speed_box_{}.pdf".format(f))
+            fig.savefig(self.out_path + "/speed_box_{}.png".format(f), dpi=300)
         if show:
             plt.show()
 
@@ -739,6 +866,7 @@ class P4(object):
         sns.set_palette("muted")
         TYPE_MAP = {"emcf": "EMCF", "cf": "CFG", "hashmap": "HashTable"}
         fig, ax = plt.subplots()
+        fig.set_dpi(300)
         ax.grid(linestyle="--")
         df = self.read_excel("summary", dtype={"set_num": int, "mem_used": np.int64})
         if xtype == "set_num":
@@ -751,15 +879,17 @@ class P4(object):
         # set line style
         ax.lines[0].set_linestyle("-")
         ax.lines[1].set_linestyle("--")
-        ax.set_xlabel(xtype, fontsize=20)
-        ax.set_ylabel("Space occupied", fontsize=20)
+        # ax.set_xlabel(xtype, fontsize=20)
+        ax.set_xlabel("最大容量", fontsize=20, fontproperties=fontCN)
+        # ax.set_ylabel("Space occupied", fontsize=20)
+        ax.set_ylabel("空间占用", fontsize=20, fontproperties=fontCN)
         # get rid of legend title
         handles, labels = ax.get_legend_handles_labels()
         ax.legend(handles=handles[:], labels=labels[:], fontsize=16)
         ax.tick_params(labelsize=16)
         # save figure
         plt.tight_layout()
-        fig.savefig(self.out_path + "/space_with_{}.pdf".format(xtype))
+        fig.savefig(self.out_path + "/space_with_{}.png".format(xtype), dpi=300)
         if show:
             plt.show()
 
@@ -770,6 +900,7 @@ class P4(object):
         df = self.read_excel("new",
                              dtype={"mem_used": int, "error_rate": np.float64, "tpr": np.float64, "query_num": int})
         fig, ax = plt.subplots()
+        fig.set_dpi(300)
         ax.grid(linestyle="--")
         df = df[df["dataset"] == ds_name].copy()
         # 按照不同的method画多条线
@@ -781,15 +912,17 @@ class P4(object):
             y = df_m["error_rate"]
             ax.plot(x, y, label=method, markersize=8, color=COLOR_BASE[i], marker=MARKER_BASE[i])
         # ax.plot(x, y, label="error rate", color=COLOR_BASE[0], marker=MARKER_BASE[0], markersize=8)
-        ax.set_xlabel("Memory used", fontsize=20)
-        ax.set_ylabel("Error rate", fontsize=20)
-        ax.set_title(self.title_map[ds_name], fontsize=20)
+        # ax.set_xlabel("Memory used", fontsize=20)
+        ax.set_xlabel("内存占用", fontsize=20, fontproperties=fontCN)
+        # ax.set_ylabel("Error rate", fontsize=20)
+        ax.set_ylabel("误报率", fontsize=20, fontproperties=fontCN)
+        # ax.set_title(self.title_map[ds_name], fontsize=20)
         ax.legend(fontsize=16)
         ax.tick_params(labelsize=16)
         out_name = ds_name.replace("/", "_").replace(".csv", "")
         # save figure use high resolution
         plt.tight_layout()
-        fig.savefig(self.out_path + "/err_rate_{}.pdf".format(out_name), dpi=300)
+        fig.savefig(self.out_path + "/err_rate_{}.png".format(out_name), dpi=300)
         if show:
             plt.show()
 
@@ -799,6 +932,7 @@ class P4(object):
         """
         df = self.read_excel("new", dtype={"mem_used": int, "error_rate": np.float64, "tpr": np.float64})
         fig, ax = plt.subplots()
+        fig.set_dpi(300)
         ax.grid(linestyle="--")
         df = df[df["dataset"] == ds_name].copy()
         # 按照不同的method画多条线
@@ -812,15 +946,17 @@ class P4(object):
             y = df_m["tpr"]
             ax.plot(x, y, label=method, markersize=8, color=COLOR_BASE[i], marker=MARKER_BASE[i])
         # ax.plot(x, y, label="error rate", color=COLOR_BASE[0], marker=MARKER_BASE[0], markersize=8)
-        ax.set_xlabel("Memory used", fontsize=20)
-        ax.set_ylabel("Query Time (us)", fontsize=20)
-        ax.set_title(self.title_map[ds_name], fontsize=20)
+        # ax.set_xlabel("Memory used", fontsize=20)
+        ax.set_xlabel("内存占用", fontsize=20, fontproperties=fontCN)
+        # ax.set_ylabel("Query Time (us)", fontsize=20)
+        ax.set_ylabel("查询时间 (us)", fontsize=20, fontproperties=fontCN)
+        # ax.set_title(self.title_map[ds_name], fontsize=20)
         ax.legend(fontsize=16)
         ax.tick_params(labelsize=16)
         out_name = ds_name.replace("/", "_").replace(".csv", "")
         # save figure use high resolution
         plt.tight_layout()
-        fig.savefig(self.out_path + "/tpr_{}.pdf".format(out_name), dpi=300)
+        fig.savefig(self.out_path + "/tpr_{}.png".format(out_name), dpi=300)
         if show:
             plt.show()
 
@@ -831,6 +967,7 @@ class P4(object):
         """
         df = self.read_excel("new", dtype={"mem_used": int, "error_rate": np.float64, "tpr": np.float64})
         fig, ax = plt.subplots()
+        fig.set_dpi(300)
         ax.grid(linestyle="--")
         df = df[df["dataset"] == ds_name].copy()
         df_m = df[(df["method"] == "emcf-v") & (df["query_num"] != 10 ** 6)].copy()
@@ -841,32 +978,37 @@ class P4(object):
         xr = df_r["R"]
         yr = df_r["tpr"]
         ax.plot(xr, yr, label="emcf-v", color=COLOR_BASE[0], marker=MARKER_BASE[0], markersize=8)
-        ax.set_xlabel("Replication number", fontsize=20)
-        ax.set_ylabel("Query Time (us)", fontsize=20)
-        ax.set_title(self.title_map[ds_name], fontsize=20)
+        # ax.set_xlabel("Replication number", fontsize=20)
+        ax.set_xlabel("复制数目 R", fontsize=20, fontproperties=fontCN)
+        # ax.set_ylabel("Query Time (us)", fontsize=20)
+        ax.set_ylabel("查询时间 (us)", fontsize=20, fontproperties=fontCN)
+        # ax.set_title(self.title_map[ds_name], fontsize=20)
         ax.tick_params(labelsize=16)
         ax.legend(fontsize=16)
         out_name = ds_name.replace("/", "_").replace(".csv", "")
         # save figure use high resolution
         plt.tight_layout()
-        fig.savefig(self.out_path + "/tpr_R_{}.pdf".format(out_name), dpi=300)
+        fig.savefig(self.out_path + "/tpr_R_{}.png".format(out_name), dpi=300)
         if show:
             plt.show()
         xk = df_k["K"]
         yk = df_k["tpr"]
         xk, yk = zip(*sorted(zip(xk, yk)))
         fig, ax = plt.subplots()
+        fig.set_dpi(300)
         ax.grid(linestyle="--")
         ax.plot(xk, yk, label="emcf-v", color=COLOR_BASE[0], marker=MARKER_BASE[0], markersize=8)
-        ax.set_xlabel("Size of bit vector K (bit)", fontsize=20)
-        ax.set_ylabel("Query Time (us)", fontsize=20)
-        ax.set_title(self.title_map[ds_name], fontsize=20)
+        ax.set_xlabel("位向量长度 K (bit)", fontsize=20, fontproperties=fontCN)
+        # ax.set_xlabel("Size of bit vector K (bit)", fontsize=20)
+        ax.set_ylabel("查询时间 (us)", fontsize=20, fontproperties=fontCN)
+        # ax.set_ylabel("Query Time (us)", fontsize=20)
+        # ax.set_title(self.title_map[ds_name], fontsize=20)
         ax.tick_params(labelsize=16)
         ax.legend(fontsize=16)
         out_name = ds_name.replace("/", "_").replace(".csv", "")
         # save figure use high resolution
         plt.tight_layout()
-        fig.savefig(self.out_path + "/tpr_K_{}.pdf".format(out_name), dpi=300)
+        fig.savefig(self.out_path + "/tpr_K_{}.png".format(out_name), dpi=300)
         if show:
             plt.show()
 
@@ -876,8 +1018,8 @@ def run(input_file, output_path):
     logger.info("Reading results from %s", input_file)
     #  ========= plot mean delay line chart =========
     # input a xlsx file, read from excel to pandas dataframe
-    # df = pd.read_excel(input_file, sheet_name="delay", skiprows=1, dtype="float")
-    # plot_mean_delay_chart(df, "Node number", "delay(ms)", "", output_path + "/mean_delay.pdf")
+    # df = pd.read_excel("E:\dsp\HelloDrMa\papers\p1\pics\data.xlsx", sheet_name="delay", skiprows=1, dtype="float")
+    # plot_mean_delay_chart(df, "节点数目", "平均时延(ms)", "", "final" + "/mean_delay.png")
     #  ========= plot bar chart =========
     # data = [9917, 8968, 4516]  # DINNRS
     # plot_bar_chart(data, "", output_path + "/DINNRS-domain-hit.pdf")
@@ -898,30 +1040,39 @@ def run(input_file, output_path):
     # p1.plot_intra_ratio_line_chart()
     # p1.plot_cache_size_to_avg_latency_line_chart()
     # p1.plot_resolve_num_levels_bar_chart()
-
+    #
     # ---------------------------paper 2-------------------------------
     # plot_cache_hit_ratio_seq_line_chart
     # p2 = P2(input_file, output_path)
-    # p2.plot_cache_hit_ratio_seq_line_chart("Time/s", "Average cache hit ratio", "", date="0616")
+    # p2.plot_cache_hit_ratio_seq_line_chart("时间（秒）", "平均缓存命中率", "", date="0615")
     # p2.plot_data_to_avg_CHR_bar_group_chart()
     # p2.plot_alpha_to_avg_CHR_bar_chart()
     # p2.plot_alpha_to_free_space_bar_chart()
-    # p2.plot_alpha_mix_bar_chart(in_f="v_alpha_10x_v1.2.csv", out_f="alpha_mix_bar_v1.2.pdf")
+    # p2.plot_alpha_mix_bar_chart(in_f="v_alpha_10x_v1.2.csv", out_f="alpha_mix_bar_v1.2.png")
     # p2.plot_t0_to_avg_CHR_bar_chart()
     # p2.plot_t0_to_free_space_bar_chart()
-    # p2.plot_t0_mix_bar_chart(in_f="v_t0_10x_v1.2.csv", out_f="t0_mix_bar_v1.2.pdf")
+    # p2.plot_t0_mix_bar_chart(in_f="v_t0_10x_v1.2.csv", out_f="t0_mix_bar_v1.2.png")
     # p2.plot_k_to_avg_CHR_bar_chart()
     # p2.plot_k_to_free_space_bar_chart()
-    # p2.plot_k_mix_bar_chart(in_f="v_k_10x_v1.2.csv", out_f="k_mix_bar_v1.2.pdf")
+    # p2.plot_k_mix_bar_chart(in_f="v_k_10x_v1.2.csv", out_f="k_mix_bar_v1.2.png")
+
+    # ---------------------------paper 3-------------------------------
+    # p3 = P3(input_file, output_path)
+    # p3.plot_nsd_bar_chart()
+    # p3.plot_max_src_load_bar_chart()
 
     # ---------------------------paper 4-------------------------------
     p4 = P4(input_file, output_path)
     # p4.draw_speed_box_chart()
     # p4.draw_space_line_chart("set_num")
     # p4.draw_space_line_chart("capacity")
-    p4.draw_err_rate_line_chart("data/processed_data.csv")
-    p4.draw_tpr_line_chart("data/processed_data.csv")
-    # p4.draw_tpr_K_R_line_chart("data/movie_processed.csv")
+    # p4.draw_err_rate_line_chart("data/processed_data.csv")
+    # p4.draw_err_rate_line_chart("data/movie_processed.csv")
+    # p4.draw_err_rate_line_chart("data/zoo_processed.csv")
+    # p4.draw_tpr_line_chart("data/processed_data.csv")
+    # p4.draw_tpr_line_chart("data/movie_processed.csv")
+    # p4.draw_tpr_line_chart("data/zoo_processed.csv")
+    p4.draw_tpr_K_R_line_chart("data/processed_data.csv")
 
 
 def main():
