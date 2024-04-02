@@ -2,6 +2,7 @@
 # -*- encoding:utf-8 -*-
 import os
 
+from deprecated import deprecated
 from tqdm import tqdm
 
 from pyecharts import options as opts
@@ -171,6 +172,7 @@ def dataHandler(flow_arr: np.ndarray, flow_new_arr: np.ndarray, topo_arr: np.nda
     return topo_arr
 
 
+@deprecated(reason="This method is deprecated.")
 def manual_set_node(key: str) -> tuple:
     if str(key) == "0":
         _is_fixed = True
@@ -359,7 +361,7 @@ def run(layout: str = "force", title="Simulation_Flow_Graph", showlabel=True) ->
                            symbol=str(symbol_list[nodes[key][2]]),
                            # symbol="image://pics/acc-sw.svg",
                            symbol_size=_symbol_size,
-                           value=[str(round(nodes[key][0]/TRAFFIC_UNIT, 2)), _ctrl],
+                           value=[str(round(nodes[key][0] / TRAFFIC_UNIT, 2)), _ctrl],
                            category=int(nodes[key][1] - 1),
                            label_opts=_label_opts,
                            tooltip_opts=_tooltip_opts,
@@ -444,18 +446,17 @@ def run(layout: str = "force", title="Simulation_Flow_Graph", showlabel=True) ->
 
 
 if __name__ == '__main__':
-    # data_source_dir = "topoGen/topology/seanrs_50x200/"
     data_source_dir = "data_source/"
-    # topo_file = data_source_dir + "topo50x200.txt"
     topo_file = data_source_dir + "community_small.txt"
     flow_data_file = data_source_dir + "flow_data.txt"
     flow_data_new_file = data_source_dir + "flow_data_new.txt"
     layout_file = data_source_dir + "layout.txt"
     node_type_file = data_source_dir + "node_type.txt"
+
     NODE_NORMAL_SIZE = 15  # Identifies the standard size of a common no-flow node
     TRAFFIC_UNIT = 10 ** 6  # * The magnitude of traffic data
     TRAFFIC_UNIT_PRINT = "1M"  # * The unit of traffic data for print, need to change with the TRAFFIC_UNIT
-    graph = run(layout="force", title="TISCALI_SEA Topology", showlabel=False)
+
+    # graph = run(layout="force", title="TISCALI_SEA Topology", showlabel=False)
+    graph = run(layout="force", title="Test Topology", showlabel=False)
     print("done!")
-#   定时10s刷新html页面
-#   <meta http-equiv="Refresh" content="10"/>
