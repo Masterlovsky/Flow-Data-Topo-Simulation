@@ -104,3 +104,6 @@ example/*.html
 .mypy_cache/
 plot_results/
 data_source/*
+topoGen/topology/*
+*.html
+Simulation_Flow_Graph.pdf
