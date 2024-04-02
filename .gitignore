@@ -105,5 +105,5 @@ example/*.html
 plot_results/
 data_source/*
 topoGen/topology/*
-*.html
+/*.html
 Simulation_Flow_Graph.pdf
