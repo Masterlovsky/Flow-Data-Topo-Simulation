@@ -18,6 +18,8 @@ $ pip install -r requirements.txt
 $ python setup.py install
 ```
 ### 使用说明：
+- 复制`data_source_example`文件夹到`data_source`文件夹下，修改其中的配置文件信息并运行`simulation_flow_graph.py`文件即可。
+
 - 绘制拓扑图的主要代码在`simulation_flow_graph.py`中，其中`run()`方法中的参数可以控制生成的拓扑图的类型。
   - `layout.txt`文件中存放的是拓扑图的节点坐标，以及as号和控制域编号，逗号分隔。文件格式为：节点编号，x坐标，y坐标，as号，控制域编号。
   - `flow_data.txt`文件中存放的是拓扑图的边的负载信息，空格分隔。文件格式为：原节点，目的节点，原节点负载，目的节点负载，边权重。
